@@ -191,8 +191,18 @@ var rules = [
   {
     name: "whitespace",
     tester: function(tested) {
-      if (tested == ' ' || tested == '\n') {
+      if (tested == ' ') {
         return lexerResults.skip;
+      } else {
+        return lexerResults.none;
+      }
+    }
+  },
+  {
+    name: "eol",
+    tester: function(tested) {
+      if (tested == '\n') {
+        return lexerResults.exact;
       } else {
         return lexerResults.none;
       }
