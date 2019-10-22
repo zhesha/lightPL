@@ -4,6 +4,7 @@ var {Machine, State, Transition} = fsm;
 module.exports = function (tokens) {
     let variableDeclarationData;
     let statementListData = [];
+    let assignStatementData;
 
     const toVariableDeclaration = Transition({
         to: 'variableDeclaration',
@@ -58,7 +59,7 @@ module.exports = function (tokens) {
         to: 'comma',
         canTransite: tested => tested.type === 'comma'
     });
-    const newStatement = Transition({
+    const emptyStatement = Transition({
         to: 'statementList',
         canTransite: tested => tested.type === 'eol'
     });
@@ -74,6 +75,55 @@ module.exports = function (tokens) {
         },
         onTransition(to) {
             variableDeclarationData[variableDeclarationData.length - 1].value = to.value
+        }
+    });
+
+    const assignValue = Transition({
+        to: 'assignValue',
+        canTransite: tested => {
+            return tested.type === 'number' ||
+                tested.type === 'string' ||
+                tested.type === '_null' ||
+                tested.type === '_false' ||
+                tested.type === '_true';
+        },
+        onTransition(to) {
+            assignStatementData.value = to.value
+        }
+    });
+
+    const toAssignStatement = Transition({
+        to: 'assignStatement',
+        canTransite: tested => {
+            return tested.type === 'identifier';
+        },
+        onTransition(to) {
+            assignStatement.restart();
+            assignStatementData = {
+                type: 'assign',
+                target:  to.value,
+                value: null,
+            }
+        }
+    });
+
+    const stayAssignStatement = Transition({
+        to: 'assignStatement',
+        canTransite (to) {
+            return assignStatement.canTransite(to);
+        },
+        onTransition(to) {
+            assignStatement.go(to);
+        }
+    });
+
+    const leaveAssignStatement = Transition({
+        to: 'statementList',
+        canTransite (to) {
+            return !assignStatement.canTransite(to);
+        },
+        onTransition(to) {
+            statementListData.push(assignStatementData);
         }
     });
 
@@ -94,10 +144,26 @@ module.exports = function (tokens) {
         }
     );
 
+    const assignStatement = Machine(
+        [
+            State('identifier', [assign], {initial: true}),
+            State('assign', [assignValue]),
+            State('assignValue'),
+        ],
+        {
+            onUnsupportedTransition(from, to) {
+                const t = to ? to.type : 'nothing';
+                const f = from ? from.type : 'nothing';
+                throw `it's error to have ${t} after ${f} in "variableDeclaration"`
+            },
+        }
+    );
+
     var statementList = Machine(
         [
-            State('statementList', [newStatement, toVariableDeclaration], {initial: true}),
+            State('statementList', [emptyStatement, toVariableDeclaration, toAssignStatement], {initial: true}),
             State('variableDeclaration', [stayVariableDeclaration, leaveVariableDeclaration]),
+            State('assignStatement', [stayAssignStatement, leaveAssignStatement]),
         ],
         {
             onUnsupportedTransition(from, to) {
