@@ -3,7 +3,10 @@ var {Machine, State, Transition} = fsm;
 
 module.exports = function (tokens) {
     let variableDeclarationData;
-    let statementListData = [];
+    let statementListData = {
+        type: 'statement_list',
+        list: [],
+    };
     let assignStatementData;
 
     const toVariableDeclaration = Transition({
@@ -33,7 +36,7 @@ module.exports = function (tokens) {
             return !variableDeclaration.canTransite(to);
         },
         onTransition(to) {
-            statementListData.push({
+            statementListData.list.push({
                 type: 'variable_declaration',
                 variables: variableDeclarationData
             });
@@ -123,7 +126,7 @@ module.exports = function (tokens) {
             return !assignStatement.canTransite(to);
         },
         onTransition(to) {
-            statementListData.push(assignStatementData);
+            statementListData.list.push(assignStatementData);
         }
     });
 

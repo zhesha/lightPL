@@ -8,7 +8,10 @@ test("empty code", function () {
     var tokens = lexer(sourceCode, rules);
     const syntaxTree = analize(tokens);
 
-    expect(syntaxTree).toEqual([]);
+    expect(syntaxTree).toEqual({
+        type: 'statement_list',
+        list: []
+    });
 });
 
 test("single variable declaration", function () {
@@ -16,12 +19,15 @@ test("single variable declaration", function () {
     var tokens = lexer(sourceCode, rules);
     const syntaxTree = analize(tokens);
 
-    expect(syntaxTree).toEqual([{
-        type: 'variable_declaration',
-        variables: [
-            {name: 'a', value: '2.1'}
-        ]
-    }]);
+    expect(syntaxTree).toEqual({
+        type: 'statement_list',
+        list: [{
+            type: 'variable_declaration',
+            variables: [
+                {name: 'a', value: '2.1'}
+            ]
+        }]
+    });
 });
 
 test("multiple variable in one declaration", function () {
@@ -29,14 +35,17 @@ test("multiple variable in one declaration", function () {
     var tokens = lexer(sourceCode, rules);
     const syntaxTree = analize(tokens);
 
-    expect(syntaxTree).toEqual([{
-        type: 'variable_declaration',
-        variables: [
-            {name: 'a', value: '2.1'},
-            {name: 'b', value: 'true'},
-            {name: 'c', value: null},
-        ]
-    }]);
+    expect(syntaxTree).toEqual({
+        type: 'statement_list',
+        list: [{
+            type: 'variable_declaration',
+            variables: [
+                {name: 'a', value: '2.1'},
+                {name: 'b', value: 'true'},
+                {name: 'c', value: null},
+            ]
+        }]
+    });
 });
 
 test("multiple variable declaration", function () {
@@ -47,15 +56,18 @@ test("multiple variable declaration", function () {
     var tokens = lexer(sourceCode, rules);
     const syntaxTree = analize(tokens);
 
-    expect(syntaxTree).toEqual([{
-        type: 'variable_declaration',
-        variables: [{name: 'a', value: '2.1'}]
-    },
-        {
-            type: 'variable_declaration',
-            variables: [{name: 'b', value: 'true'}]
+    expect(syntaxTree).toEqual({
+            type: 'statement_list',
+            list: [{
+                type: 'variable_declaration',
+                variables: [{name: 'a', value: '2.1'}]
+            },
+                {
+                    type: 'variable_declaration',
+                    variables: [{name: 'b', value: 'true'}]
+                }
+            ]
         }
-        ]
     );
 });
 
@@ -64,11 +76,14 @@ test("single assign", function () {
     var tokens = lexer(sourceCode, rules);
     const syntaxTree = analize(tokens);
 
-    expect(syntaxTree).toEqual([{
-        type: 'assign',
-        target:  'a',
-        value: '2.1'
-    }]);
+    expect(syntaxTree).toEqual({
+        type: 'statement_list',
+        list: [{
+            type: 'assign',
+            target:  'a',
+            value: '2.1'
+        }]
+    });
 });
 
 test("multiple single assign", function () {
@@ -78,7 +93,9 @@ test("multiple single assign", function () {
     var tokens = lexer(sourceCode, rules);
     const syntaxTree = analize(tokens);
 
-    expect(syntaxTree).toEqual([
+    expect(syntaxTree).toEqual({
+        type: 'statement_list',
+        list: [
         {
             "target": "a",
             "type": "assign",
@@ -94,7 +111,7 @@ test("multiple single assign", function () {
             "type": "assign",
             "value": "null"
         }
-    ]);
+    ]});
 });
 
 test("variable declaration and assign", function () {
@@ -105,17 +122,19 @@ test("variable declaration and assign", function () {
     var tokens = lexer(sourceCode, rules);
     const syntaxTree = analize(tokens);
 
-    expect(syntaxTree).toEqual([{
+    expect(syntaxTree).toEqual({
+        type: 'statement_list',
+        list: [{
             type: 'variable_declaration',
             variables: [{name: 'a', value: '2.1'}]
         },
-        {
-            type: 'assign',
-            target:  'a',
-            value: '4.2'
-        }
+            {
+                type: 'assign',
+                target: 'a',
+                value: '4.2'
+            }
         ]
-    );
+    });
 });
 
 test("declaration and assign mix", function () {
@@ -128,7 +147,9 @@ test("declaration and assign mix", function () {
     var tokens = lexer(sourceCode, rules);
     const syntaxTree = analize(tokens);
 
-    expect(syntaxTree).toEqual([{
+    expect(syntaxTree).toEqual({
+        type: 'statement_list',
+        list: [{
             "type": "variable_declaration",
             "variables": [
                 {
@@ -157,5 +178,5 @@ test("declaration and assign mix", function () {
                 "value": "false"
             }
         ]
-    );
+    });
 });
