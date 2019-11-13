@@ -8,14 +8,21 @@ module.exports = function(tokens) {
   let ifStatementData;
   const statementList = [];
 
+  const assign = literal("assign");
+  const comma = literal("comma");
+  const _if = literal("_if");
+  const _var = literal("_var");
+  const emptyStatement = literal("statementList", "eol");
+
   const toVariableDeclaration = Transition({
     to: "variableDeclaration",
     canTransite: tested => {
       return tested.type === "_var";
     },
-    onTransition() {
+    onTransition(to) {
       variableDeclaration.restart();
       variableDeclarationData = [];
+      variableDeclaration.go(to);
     }
   });
 
@@ -59,19 +66,6 @@ module.exports = function(tokens) {
     onTransition(to) {
       ifStatementData.condition = to.value;
     }
-  });
-
-  const assign = Transition({
-    to: "assign",
-    canTransite: tested => tested.type === "assign"
-  });
-  const comma = Transition({
-    to: "comma",
-    canTransite: tested => tested.type === "comma"
-  });
-  const emptyStatement = Transition({
-    to: "statementList",
-    canTransite: tested => tested.type === "eol"
   });
 
   const varDeclarationValue = Transition({
@@ -119,13 +113,21 @@ module.exports = function(tokens) {
         condition: null,
         statements: []
       };
+      ifStatement.go(to);
+    }
+  });
+
+  const l_brace = Transition({
+    to: "l_brace",
+    canTransite: tested => {
+      return tested.type === "l_brace";
     }
   });
 
   const toStatementList = Transition({
     to: "statementList",
     canTransite: tested => {
-      return tested.type === "l_brace";
+      return true;
     },
     onTransition(to) {
       statementList.push(getStatementList());
@@ -133,6 +135,7 @@ module.exports = function(tokens) {
         type: "statement_list",
         list: []
       });
+      statementList[statementList.length - 1].go(to);
     }
   });
 
@@ -218,18 +221,15 @@ module.exports = function(tokens) {
 
   var variableDeclaration = Machine(
     [
-      State(null, [identifier], { initial: true }),
+      State(null, [_var], { initial: true }),
+      State("_var", [identifier]),
       State("identifier", [assign, comma]),
       State("comma", [identifier]),
       State("assign", [varDeclarationValue]),
       State("varDeclarationValue", [comma])
     ],
     {
-      onUnsupportedTransition(from, to) {
-        const t = to ? to.type : "nothing";
-        const f = from ? from.type : "nothing";
-        throw `it's error to have ${t} after ${f} in "variableDeclaration"`;
-      }
+      onUnsupportedTransition: onUnsupportedTransition
     }
   );
 
@@ -240,27 +240,21 @@ module.exports = function(tokens) {
       State("assignValue")
     ],
     {
-      onUnsupportedTransition(from, to) {
-        const t = to ? to.type : "nothing";
-        const f = from ? from.type : "nothing";
-        throw `it's error to have ${t} after ${f} in "variableDeclaration"`;
-      }
+      onUnsupportedTransition: onUnsupportedTransition
     }
   );
 
   const ifStatement = Machine(
     [
-      State("_if", [ifIdentifier], { initial: true }),
-      State("identifier", [toStatementList]),
+      State(null, [_if], { initial: true }),
+      State("_if", [ifIdentifier]),
+      State("identifier", [l_brace]),
+      State("l_brace", [toStatementList]),
       State("statementList", [stayStatementsList, leaveStatementsList]),
       State("r_brace")
     ],
     {
-      onUnsupportedTransition(from, to) {
-        const t = to ? to.type : "nothing";
-        const f = from ? from.type : "nothing";
-        throw `it's error to have ${t} after ${f} in "variableDeclaration"`;
-      }
+      onUnsupportedTransition: onUnsupportedTransition
     }
   );
 
@@ -292,12 +286,21 @@ module.exports = function(tokens) {
         State("ifStatement", [stayIfStatement, leaveIfStatement])
       ],
       {
-        onUnsupportedTransition(from, to) {
-          const t = to ? to.type : "nothing";
-          const f = from ? from.type : "nothing";
-          throw `it's error to have ${t} after ${f} in "statementList"`;
-        }
+        onUnsupportedTransition: onUnsupportedTransition
       }
     );
+  }
+
+  function literal(to, test) {
+    return Transition({
+      to: to,
+      canTransite: tested => tested.type === (test || to)
+    });
+  }
+
+  function onUnsupportedTransition(from, to) {
+    const t = to ? to.type : "nothing";
+    const f = from ? from.type : "nothing";
+    throw `it's error to have ${t} after ${f} in "statementList"`;
   }
 };
