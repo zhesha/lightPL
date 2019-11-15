@@ -3,11 +3,8 @@ var { Machine, State, Transition } = fsm;
 
 module.exports = function(tokens) {
   let variableDeclarationData;
-  let statementListData = [];
   let assignStatementData;
-  let ifStatementData;
-  const machines = [];
-  const processors = [];
+  const stack = [];
 
   const assign = literal("assign");
   const comma = literal("comma");
@@ -44,7 +41,7 @@ module.exports = function(tokens) {
       return !variableDeclaration.canTransite(to);
     },
     onTransition(to) {
-      statementListData[statementListData.length - 1].list.push({
+      stack[stack.length - 1].data.list.push({
         type: "variable_declaration",
         variables: variableDeclarationData
       });
@@ -66,7 +63,7 @@ module.exports = function(tokens) {
     to: "identifier",
     canTransite: tested => tested.type === "identifier",
     onTransition(to) {
-      ifStatementData.condition = to.value;
+      stack[stack.length - 1].data.condition = to.value;
     }
   });
 
@@ -109,14 +106,16 @@ module.exports = function(tokens) {
       return tested.type === "_if";
     },
     onTransition(to) {
-      machines.push(ifStatement());
-      processors.push(ifProcessor);
-      ifStatementData = {
-        type: "if",
-        condition: null,
-        statements: []
-      };
-      machines[machines.length - 1].go(to);
+      stack.push({
+        machine: ifStatement(),
+        processors: ifProcessor,
+        data: {
+          type: "if",
+          condition: null,
+          statements: []
+        }
+      });
+      stack[stack.length - 1].machine.go(to);
     }
   });
 
@@ -133,13 +132,15 @@ module.exports = function(tokens) {
       return true;
     },
     onTransition(to) {
-      machines.push(getStatementList());
-      processors.push(statementListProcessor);
-      statementListData.push({
-        type: "statement_list",
-        list: []
+      stack.push({
+        machine: getStatementList(),
+        processors: statementListProcessor,
+        data: {
+          type: "statement_list",
+          list: []
+        }
       });
-      machines[machines.length - 1].go(to);
+      stack[stack.length - 1].machine.go(to);
     }
   });
 
@@ -174,7 +175,7 @@ module.exports = function(tokens) {
       return !assignStatement.canTransite(to);
     },
     onTransition(to) {
-      statementListData[statementListData.length - 1].list.push(
+      stack[stack.length - 1].data.list.push(
         assignStatementData
       );
     }
@@ -235,28 +236,30 @@ module.exports = function(tokens) {
     );
   }
 
-  machines.push(getStatementList());
-  processors.push(null);
-  statementListData.push({
-    type: "statement_list",
-    list: []
+  stack.push({
+    machine: getStatementList(),
+    processors: null,
+    data: {
+      type: "statement_list",
+      list: []
+    }
   });
 
   for (var token of tokens) {
-    if (machines[machines.length - 1].canTransite(token)) {
-      machines[machines.length - 1].go(token);
+    const entity = stack[stack.length - 1];
+    if (entity.machine.canTransite(token)) {
+      entity.machine.go(token);
     } else {
-      machines.pop();
-      const process = processors.pop();
-      process && process();
-      machines[machines.length - 1].go(token);
+      entity.processors && entity.processors();
+      stack.pop();
+      stack[stack.length - 1].machine.go(token);
     }
   }
-  for (var process of processors) {
-    process && process();
+  for (var entity of stack) {
+    entity.processors && entity.processors();
   }
-  machines[0].go({ type: "eol" });
-  return statementListData[statementListData.length - 1];
+  stack[0].machine.go({ type: "eol" });
+  return stack[0].data;
 
   function getStatementList() {
     return Machine(
@@ -295,12 +298,10 @@ module.exports = function(tokens) {
   }
 
   function ifProcessor() {
-    statementListData[statementListData.length - 1].list.push(
-      ifStatementData
-    );
+    stack[stack.length - 2].data.list.push(stack[stack.length - 1].data);
   }
 
   function statementListProcessor() {
-    ifStatementData.statements = statementListData.pop();
+    stack[stack.length - 2].data.statements = stack[stack.length - 1].data;
   }
 };
