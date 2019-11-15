@@ -6,13 +6,15 @@ module.exports = function(tokens) {
   let statementListData = [];
   let assignStatementData;
   let ifStatementData;
-  const statementList = [];
+  const machines = [];
+  const processors = [];
 
   const assign = literal("assign");
   const comma = literal("comma");
   const _if = literal("_if");
   const _var = literal("_var");
-  const emptyStatement = literal("statementList", "eol");
+  const r_brace = literal("r_brace");
+  const nextStatement = literal("statementList", "eol");
 
   const toVariableDeclaration = Transition({
     to: "variableDeclaration",
@@ -107,13 +109,14 @@ module.exports = function(tokens) {
       return tested.type === "_if";
     },
     onTransition(to) {
-      ifStatement.restart();
+      machines.push(ifStatement());
+      processors.push(ifProcessor);
       ifStatementData = {
         type: "if",
         condition: null,
         statements: []
       };
-      ifStatement.go(to);
+      machines[machines.length - 1].go(to);
     }
   });
 
@@ -130,12 +133,13 @@ module.exports = function(tokens) {
       return true;
     },
     onTransition(to) {
-      statementList.push(getStatementList());
+      machines.push(getStatementList());
+      processors.push(statementListProcessor);
       statementListData.push({
         type: "statement_list",
         list: []
       });
-      statementList[statementList.length - 1].go(to);
+      machines[machines.length - 1].go(to);
     }
   });
 
@@ -176,46 +180,17 @@ module.exports = function(tokens) {
     }
   });
 
-  const stayIfStatement = Transition({
-    to: "ifStatement",
-    canTransite(to) {
-      return ifStatement.canTransite(to);
-    },
-    onTransition(to) {
-      ifStatement.go(to);
-    }
-  });
-
   const leaveIfStatement = Transition({
     to: "statementList",
     canTransite(to) {
-      return !ifStatement.canTransite(to);
-    },
-    onTransition(to) {
-      statementListData[statementListData.length - 1].list.push(
-        ifStatementData
-      );
-    }
-  });
-
-  const stayStatementsList = Transition({
-    to: "statementList",
-    canTransite(to) {
-      return statementList[statementList.length - 1].canTransite(to);
-    },
-    onTransition(to) {
-      statementList[statementList.length - 1].go(to);
+      return true;
     }
   });
 
   const leaveStatementsList = Transition({
     to: "r_brace",
     canTransite(to) {
-      return !statementList[statementList.length - 1].canTransite(to);
-    },
-    onTransition(to) {
-      statementList.pop();
-      ifStatementData.statements = statementListData.pop();
+      return true
     }
   });
 
@@ -229,7 +204,7 @@ module.exports = function(tokens) {
       State("varDeclarationValue", [comma])
     ],
     {
-      onUnsupportedTransition: onUnsupportedTransition
+      onUnsupportedTransition: onUnsupportedTransition("variableDeclaration")
     }
   );
 
@@ -240,34 +215,47 @@ module.exports = function(tokens) {
       State("assignValue")
     ],
     {
-      onUnsupportedTransition: onUnsupportedTransition
+      onUnsupportedTransition: onUnsupportedTransition("assignStatement")
     }
   );
 
-  const ifStatement = Machine(
-    [
-      State(null, [_if], { initial: true }),
-      State("_if", [ifIdentifier]),
-      State("identifier", [l_brace]),
-      State("l_brace", [toStatementList]),
-      State("statementList", [stayStatementsList, leaveStatementsList]),
-      State("r_brace")
-    ],
-    {
-      onUnsupportedTransition: onUnsupportedTransition
-    }
-  );
+  function ifStatement() {
+    return Machine(
+      [
+        State(null, [_if], { initial: true }),
+        State("_if", [ifIdentifier]),
+        State("identifier", [l_brace]),
+        State("l_brace", [toStatementList]),
+        State("statementList", [r_brace]),
+        State("r_brace")
+      ],
+      {
+        onUnsupportedTransition: onUnsupportedTransition("ifStatement")
+      }
+    );
+  }
 
-  statementList.push(getStatementList());
+  machines.push(getStatementList());
+  processors.push(null);
   statementListData.push({
     type: "statement_list",
     list: []
   });
 
   for (var token of tokens) {
-    statementList[0].go(token);
+    if (machines[machines.length - 1].canTransite(token)) {
+      machines[machines.length - 1].go(token);
+    } else {
+      machines.pop();
+      const process = processors.pop();
+      process && process();
+      machines[machines.length - 1].go(token);
+    }
   }
-  statementList[0].go({ type: "eol" });
+  for (var process of processors) {
+    process && process();
+  }
+  machines[0].go({ type: "eol" });
   return statementListData[statementListData.length - 1];
 
   function getStatementList() {
@@ -275,7 +263,7 @@ module.exports = function(tokens) {
       [
         State(
           "statementList",
-          [emptyStatement, toVariableDeclaration, toAssignStatement, toIf],
+          [nextStatement, toVariableDeclaration, toAssignStatement, toIf],
           { initial: true }
         ),
         State("variableDeclaration", [
@@ -283,10 +271,10 @@ module.exports = function(tokens) {
           leaveVariableDeclaration
         ]),
         State("assignStatement", [stayAssignStatement, leaveAssignStatement]),
-        State("ifStatement", [stayIfStatement, leaveIfStatement])
+        State("ifStatement", [nextStatement])
       ],
       {
-        onUnsupportedTransition: onUnsupportedTransition
+        onUnsupportedTransition: onUnsupportedTransition("StatementList")
       }
     );
   }
@@ -298,9 +286,21 @@ module.exports = function(tokens) {
     });
   }
 
-  function onUnsupportedTransition(from, to) {
-    const t = to ? to.type : "nothing";
-    const f = from ? from.type : "nothing";
-    throw `it's error to have ${t} after ${f} in "statementList"`;
+  function onUnsupportedTransition (machineName) {
+    return (from, to) => {
+      const t = to ? to.type : "nothing";
+      const f = from ? from.type : "nothing";
+      throw `it's error to have ${t} after ${f} in "${machineName}"`;
+    }
+  }
+
+  function ifProcessor() {
+    statementListData[statementListData.length - 1].list.push(
+      ifStatementData
+    );
+  }
+
+  function statementListProcessor() {
+    ifStatementData.statements = statementListData.pop();
   }
 };
