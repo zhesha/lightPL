@@ -41,6 +41,14 @@ module.exports = function(tokens) {
     }
   });
 
+  const assignIdentifier = Transition({
+    to: "identifier",
+    canTransite: tested => tested.type === "identifier",
+    onTransition(to) {
+      stack[stack.length - 1].data.target = to.value;
+    }
+  });
+
   const ifIdentifier = Transition({
     to: "identifier",
     canTransite: tested => tested.type === "identifier",
@@ -79,7 +87,7 @@ module.exports = function(tokens) {
       );
     },
     onTransition(to) {
-      assignStatementData.value = to.value;
+      stack[stack.length - 1].data.value = to.value;
     }
   });
 
@@ -133,34 +141,16 @@ module.exports = function(tokens) {
       return tested.type === "identifier";
     },
     onTransition(to) {
-      assignStatement.restart();
-      assignStatementData = {
-        type: "assign",
-        target: to.value,
-        value: null
-      };
-    }
-  });
-
-  const stayAssignStatement = Transition({
-    to: "assignStatement",
-    canTransite(to) {
-      return assignStatement.canTransite(to);
-    },
-    onTransition(to) {
-      assignStatement.go(to);
-    }
-  });
-
-  const leaveAssignStatement = Transition({
-    to: "statementList",
-    canTransite(to) {
-      return !assignStatement.canTransite(to);
-    },
-    onTransition(to) {
-      stack[stack.length - 1].data.list.push(
-        assignStatementData
-      );
+      stack.push({
+        machine: assignStatement(),
+        processors: processToStatement,
+        data: {
+          type: "assign",
+          target: null,
+          value: null
+        }
+      });
+      stack[stack.length - 1].machine.go(to);
     }
   });
 
@@ -180,17 +170,19 @@ module.exports = function(tokens) {
     );
   }
 
-
-  const assignStatement = Machine(
-    [
-      State("identifier", [assign], { initial: true }),
-      State("assign", [assignValue]),
-      State("assignValue")
-    ],
-    {
-      onUnsupportedTransition: onUnsupportedTransition("assignStatement")
-    }
-  );
+  function assignStatement(){
+    return Machine(
+      [
+        State(null, [assignIdentifier], { initial: true }),
+        State("identifier", [assign]),
+        State("assign", [assignValue]),
+        State("assignValue")
+      ],
+      {
+        onUnsupportedTransition: onUnsupportedTransition("assignStatement")
+      }
+    );
+  }
 
   function ifStatement() {
     return Machine(
@@ -241,10 +233,8 @@ module.exports = function(tokens) {
           [nextStatement, toVariableDeclaration, toAssignStatement, toIf],
           { initial: true }
         ),
-        State("variableDeclaration", [
-          nextStatement
-        ]),
-        State("assignStatement", [stayAssignStatement, leaveAssignStatement]),
+        State("variableDeclaration", [nextStatement]),
+        State("assignStatement", [nextStatement]),
         State("ifStatement", [nextStatement])
       ],
       {
