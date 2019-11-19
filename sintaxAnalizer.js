@@ -2,60 +2,25 @@ var fsm = require("@sasha-z/fsm_js");
 var { Machine, State, Transition } = fsm;
 
 module.exports = function(tokens) {
-  let assignStatementData;
   const stack = [];
 
   const assign = literal("assign");
   const comma = literal("comma");
   const _if = literal("_if");
   const _var = literal("_var");
+  const l_brace = literal("l_brace");
   const r_brace = literal("r_brace");
   const nextStatement = literal("statementList", "eol");
 
-  const toVariableDeclaration = Transition({
-    to: "variableDeclaration",
-    canTransite: tested => {
-      return tested.type === "_var";
-    },
-    onTransition(to) {
-      stack.push({
-        machine: variableDeclaration(),
-        processors: processToStatement,
-        data: {
-          type: "variable_declaration",
-          variables: []
-        }
-      });
-      stack[stack.length - 1].machine.go(to);
-    }
-  });
-
-  const identifier = Transition({
-    to: "identifier",
-    canTransite: tested => tested.type === "identifier",
-    onTransition(to) {
-      stack[stack.length - 1].data.variables.push({
-        name: to.value,
-        value: null
-      });
-    }
-  });
-
-  const assignIdentifier = Transition({
-    to: "identifier",
-    canTransite: tested => tested.type === "identifier",
-    onTransition(to) {
-      stack[stack.length - 1].data.target = to.value;
-    }
-  });
-
-  const ifIdentifier = Transition({
-    to: "identifier",
-    canTransite: tested => tested.type === "identifier",
-    onTransition(to) {
-      stack[stack.length - 1].data.condition = to.value;
-    }
-  });
+  function identifier(handler) {
+    return Transition({
+      to: "identifier",
+      canTransite: tested => tested.type === "identifier",
+      onTransition(to) {
+        handler(to.value);
+      }
+    });
+  }
 
   const varDeclarationValue = Transition({
     to: "varDeclarationValue",
@@ -110,13 +75,6 @@ module.exports = function(tokens) {
     }
   });
 
-  const l_brace = Transition({
-    to: "l_brace",
-    canTransite: tested => {
-      return tested.type === "l_brace";
-    }
-  });
-
   const toStatementList = Transition({
     to: "statementList",
     canTransite: tested => {
@@ -154,13 +112,41 @@ module.exports = function(tokens) {
     }
   });
 
+  const toVariableDeclaration = Transition({
+    to: "variableDeclaration",
+    canTransite: tested => {
+      return tested.type === "_var";
+    },
+    onTransition(to) {
+      stack.push({
+        machine: variableDeclaration(),
+        processors: processToStatement,
+        data: {
+          type: "variable_declaration",
+          variables: []
+        }
+      });
+      stack[stack.length - 1].machine.go(to);
+    }
+  });
+
   function variableDeclaration() {
     return Machine(
       [
         State(null, [_var], {initial: true}),
-        State("_var", [identifier]),
+        State("_var", [identifier(value => {
+          stack[stack.length - 1].data.variables.push({
+            name: value,
+            value: null
+          });
+        })]),
         State("identifier", [assign, comma]),
-        State("comma", [identifier]),
+        State("comma", [identifier(value => {
+          stack[stack.length - 1].data.variables.push({
+            name: value,
+            value: null
+          });
+        })]),
         State("assign", [varDeclarationValue]),
         State("varDeclarationValue", [comma])
       ],
@@ -173,7 +159,9 @@ module.exports = function(tokens) {
   function assignStatement(){
     return Machine(
       [
-        State(null, [assignIdentifier], { initial: true }),
+        State(null, [identifier(value => {
+          stack[stack.length - 1].data.target = value;
+        })], { initial: true }),
         State("identifier", [assign]),
         State("assign", [assignValue]),
         State("assignValue")
@@ -188,7 +176,9 @@ module.exports = function(tokens) {
     return Machine(
       [
         State(null, [_if], { initial: true }),
-        State("_if", [ifIdentifier]),
+        State("_if", [identifier(value => {
+          stack[stack.length - 1].data.condition = value;
+        })]),
         State("identifier", [l_brace]),
         State("l_brace", [toStatementList]),
         State("statementList", [r_brace]),
@@ -219,7 +209,6 @@ module.exports = function(tokens) {
       stack[stack.length - 1].machine.go(token);
     }
   }
-  stack[0].machine.go({ type: "eol" });
   for (var entity of stack) {
     entity.processors && entity.processors();
   }
