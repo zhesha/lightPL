@@ -22,113 +22,23 @@ module.exports = function(tokens) {
     });
   }
 
-  const varDeclarationValue = Transition({
-    to: "varDeclarationValue",
-    canTransite: tested => {
-      return (
-        tested.type === "number" ||
-        tested.type === "string" ||
-        tested.type === "_null" ||
-        tested.type === "_false" ||
-        tested.type === "_true"
-      );
-    },
-    onTransition(to) {
-      const data = stack[stack.length - 1].data;
-      data.variables[data.variables.length - 1].value =
-        to.value;
-    }
-  });
-
-  const assignValue = Transition({
-    to: "assignValue",
-    canTransite: tested => {
-      return (
-        tested.type === "number" ||
-        tested.type === "string" ||
-        tested.type === "_null" ||
-        tested.type === "_false" ||
-        tested.type === "_true"
-      );
-    },
-    onTransition(to) {
-      stack[stack.length - 1].data.value = to.value;
-    }
-  });
-
-  const toIf = Transition({
-    to: "ifStatement",
-    canTransite: tested => {
-      return tested.type === "_if";
-    },
-    onTransition(to) {
-      stack.push({
-        machine: ifStatement(),
-        processors: processToStatement,
-        data: {
-          type: "if",
-          condition: null,
-          statements: []
-        }
-      });
-      stack[stack.length - 1].machine.go(to);
-    }
-  });
-
-  const toStatementList = Transition({
-    to: "statementList",
-    canTransite: tested => {
-      return true;
-    },
-    onTransition(to) {
-      stack.push({
-        machine: getStatementList(),
-        processors: processToIf,
-        data: {
-          type: "statement_list",
-          list: []
-        }
-      });
-      stack[stack.length - 1].machine.go(to);
-    }
-  });
-
-  const toAssignStatement = Transition({
-    to: "assignStatement",
-    canTransite: tested => {
-      return tested.type === "identifier";
-    },
-    onTransition(to) {
-      stack.push({
-        machine: assignStatement(),
-        processors: processToStatement,
-        data: {
-          type: "assign",
-          target: null,
-          value: null
-        }
-      });
-      stack[stack.length - 1].machine.go(to);
-    }
-  });
-
-  const toVariableDeclaration = Transition({
-    to: "variableDeclaration",
-    canTransite: tested => {
-      return tested.type === "_var";
-    },
-    onTransition(to) {
-      stack.push({
-        machine: variableDeclaration(),
-        processors: processToStatement,
-        data: {
-          type: "variable_declaration",
-          variables: []
-        }
-      });
-      stack[stack.length - 1].machine.go(to);
-    }
-  });
+  function value(handler) {
+    return Transition({
+      to: "value",
+      canTransite: tested => {
+        return (
+          tested.type === "number" ||
+          tested.type === "string" ||
+          tested.type === "_null" ||
+          tested.type === "_false" ||
+          tested.type === "_true"
+        );
+      },
+      onTransition(to) {
+        handler(to.value);
+      }
+    });
+  }
 
   function variableDeclaration() {
     return Machine(
@@ -147,8 +57,11 @@ module.exports = function(tokens) {
             value: null
           });
         })]),
-        State("assign", [varDeclarationValue]),
-        State("varDeclarationValue", [comma])
+        State("assign", [value(value => {
+          const data = stack[stack.length - 1].data;
+          data.variables[data.variables.length - 1].value = value;
+        })]),
+        State("value", [comma])
       ],
       {
         onUnsupportedTransition: onUnsupportedTransition("variableDeclaration")
@@ -163,8 +76,10 @@ module.exports = function(tokens) {
           stack[stack.length - 1].data.target = value;
         })], { initial: true }),
         State("identifier", [assign]),
-        State("assign", [assignValue]),
-        State("assignValue")
+        State("assign", [value(value => {
+          stack[stack.length - 1].data.value = value;
+        })]),
+        State("value")
       ],
       {
         onUnsupportedTransition: onUnsupportedTransition("assignStatement")
@@ -180,7 +95,14 @@ module.exports = function(tokens) {
           stack[stack.length - 1].data.condition = value;
         })]),
         State("identifier", [l_brace]),
-        State("l_brace", [toStatementList]),
+        State("l_brace", [to("statementList", () => true, () => ({
+          machine: getStatementList(),
+          processors: processToIf,
+          data: {
+            type: "statement_list",
+            list: []
+          }
+        }))]),
         State("statementList", [r_brace]),
         State("r_brace")
       ],
@@ -219,7 +141,35 @@ module.exports = function(tokens) {
       [
         State(
           "statementList",
-          [nextStatement, toVariableDeclaration, toAssignStatement, toIf],
+          [
+            nextStatement,
+            to("variableDeclaration", is("_var"), () => ({
+              machine: variableDeclaration(),
+              processors: processToStatement,
+              data: {
+                type: "variable_declaration",
+                variables: []
+              }
+            })),
+            to("assignStatement", is("identifier"), () => ({
+              machine: assignStatement(),
+              processors: processToStatement,
+              data: {
+                type: "assign",
+                target: null,
+                value: null
+              }
+            })),
+            to("ifStatement", is("_if"), () => ({
+              machine: ifStatement(),
+              processors: processToStatement,
+              data: {
+                type: "if",
+                condition: null,
+                statements: []
+              }
+            })),
+          ],
           { initial: true }
         ),
         State("variableDeclaration", [nextStatement]),
@@ -253,5 +203,22 @@ module.exports = function(tokens) {
 
   function processToIf() {
     stack[stack.length - 2].data.statements = stack[stack.length - 1].data;
+  }
+
+  function to(entity, canTransite, entry) {
+    return Transition({
+      to: entity,
+      canTransite: canTransite,
+      onTransition(to) {
+        stack.push(entry());
+        stack[stack.length - 1].machine.go(to);
+      }
+    });
+  }
+
+  function is(type) {
+    return tested => {
+      return tested.type === type;
+    };
   }
 };
