@@ -12,32 +12,74 @@ module.exports = function(tokens) {
   const r_brace = literal("r_brace");
   const nextStatement = literal("statementList", "eol");
 
-  function identifier(handler) {
-    return Transition({
-      to: "identifier",
-      canTransite: tested => tested.type === "identifier",
-      onTransition(to) {
-        handler(to.value);
-      }
-    });
-  }
+  stack.push({
+    machine: statementList(),
+    processors: null,
+    data: {
+      type: "statement_list",
+      list: []
+    }
+  });
 
-  function value(handler) {
-    return Transition({
-      to: "value",
-      canTransite: tested => {
-        return (
-          tested.type === "number" ||
-          tested.type === "string" ||
-          tested.type === "_null" ||
-          tested.type === "_false" ||
-          tested.type === "_true"
-        );
-      },
-      onTransition(to) {
-        handler(to.value);
+  for (var token of tokens) {
+    const entity = stack[stack.length - 1];
+    if (entity.machine.canTransite(token)) {
+      entity.machine.go(token);
+    } else {
+      entity.processors && entity.processors();
+      stack.pop();
+      stack[stack.length - 1].machine.go(token);
+    }
+  }
+  for (var entity of stack) {
+    entity.processors && entity.processors();
+  }
+  return stack[0].data;
+
+  function statementList() {
+    return Machine(
+      [
+        State(
+          "statementList",
+          [
+            nextStatement,
+            to("variableDeclaration", is("_var"), () => ({
+              machine: variableDeclaration(),
+              processors: processToStatement,
+              data: {
+                type: "variable_declaration",
+                variables: []
+              }
+            })),
+            to("assignStatement", is("identifier"), () => ({
+              machine: assignStatement(),
+              processors: processToStatement,
+              data: {
+                type: "assign",
+                target: null,
+                value: null
+              }
+            })),
+            to("ifStatement", is("_if"), () => ({
+              machine: ifStatement(),
+              processors: processToStatement,
+              data: {
+                type: "if",
+                condition: null,
+                statements: []
+              }
+            })),
+          ],
+          { initial: true }
+        ),
+        State("variableDeclaration", [nextStatement]),
+        State("assignStatement", [nextStatement]),
+        State("ifStatement", [nextStatement])
+      ],
+      {
+        onUnsupportedTransition: onUnsupportedTransition("StatementList")
       }
-    });
+    );
   }
 
   function variableDeclaration() {
@@ -96,7 +138,7 @@ module.exports = function(tokens) {
         })]),
         State("identifier", [l_brace]),
         State("l_brace", [to("statementList", () => true, () => ({
-          machine: getStatementList(),
+          machine: statementList(),
           processors: processToIf,
           data: {
             type: "statement_list",
@@ -112,74 +154,40 @@ module.exports = function(tokens) {
     );
   }
 
-  stack.push({
-    machine: getStatementList(),
-    processors: null,
-    data: {
-      type: "statement_list",
-      list: []
-    }
-  });
-
-  for (var token of tokens) {
-    const entity = stack[stack.length - 1];
-    if (entity.machine.canTransite(token)) {
-      entity.machine.go(token);
-    } else {
-      entity.processors && entity.processors();
-      stack.pop();
-      stack[stack.length - 1].machine.go(token);
+  function onUnsupportedTransition (machineName) {
+    return (from, to) => {
+      const t = to ? to.type : "nothing";
+      const f = from ? from.type : "nothing";
+      throw `it's error to have ${t} after ${f} in "${machineName}"`;
     }
   }
-  for (var entity of stack) {
-    entity.processors && entity.processors();
-  }
-  return stack[0].data;
 
-  function getStatementList() {
-    return Machine(
-      [
-        State(
-          "statementList",
-          [
-            nextStatement,
-            to("variableDeclaration", is("_var"), () => ({
-              machine: variableDeclaration(),
-              processors: processToStatement,
-              data: {
-                type: "variable_declaration",
-                variables: []
-              }
-            })),
-            to("assignStatement", is("identifier"), () => ({
-              machine: assignStatement(),
-              processors: processToStatement,
-              data: {
-                type: "assign",
-                target: null,
-                value: null
-              }
-            })),
-            to("ifStatement", is("_if"), () => ({
-              machine: ifStatement(),
-              processors: processToStatement,
-              data: {
-                type: "if",
-                condition: null,
-                statements: []
-              }
-            })),
-          ],
-          { initial: true }
-        ),
-        State("variableDeclaration", [nextStatement]),
-        State("assignStatement", [nextStatement]),
-        State("ifStatement", [nextStatement])
-      ],
-      {
-        onUnsupportedTransition: onUnsupportedTransition("StatementList")
+  function identifier(handler) {
+    return Transition({
+      to: "identifier",
+      canTransite: tested => tested.type === "identifier",
+      onTransition(to) {
+        handler(to.value);
       }
-    );
+    });
+  }
+
+  function value(handler) {
+    return Transition({
+      to: "value",
+      canTransite: tested => {
+        return (
+          tested.type === "number" ||
+          tested.type === "string" ||
+          tested.type === "_null" ||
+          tested.type === "_false" ||
+          tested.type === "_true"
+        );
+      },
+      onTransition(to) {
+        handler(to.value);
+      }
+    });
   }
 
   function literal(to, test) {
@@ -187,14 +195,6 @@ module.exports = function(tokens) {
       to: to,
       canTransite: tested => tested.type === (test || to)
     });
-  }
-
-  function onUnsupportedTransition (machineName) {
-    return (from, to) => {
-      const t = to ? to.type : "nothing";
-      const f = from ? from.type : "nothing";
-      throw `it's error to have ${t} after ${f} in "${machineName}"`;
-    }
   }
 
   function processToStatement() {
