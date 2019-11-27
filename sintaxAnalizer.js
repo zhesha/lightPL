@@ -21,18 +21,21 @@ module.exports = function(tokens) {
     }
   });
 
-  for (var token of tokens) {
+  for(let i = 0; i < tokens.length; i++) {
+    const token = tokens[i];
     const entity = stack[stack.length - 1];
     if (entity.machine.canTransite(token)) {
       entity.machine.go(token);
     } else {
       entity.processors && entity.processors();
       stack.pop();
-      stack[stack.length - 1].machine.go(token);
+      i--;
     }
   }
-  for (var entity of stack) {
+  while (stack.length > 1) {
+    const entity = stack[stack.length - 1];
     entity.processors && entity.processors();
+    stack.pop();
   }
   return stack[0].data;
 
@@ -118,9 +121,14 @@ module.exports = function(tokens) {
           stack[stack.length - 1].data.target = value;
         })], { initial: true }),
         State("identifier", [assign]),
-        State("assign", [value(value => {
-          stack[stack.length - 1].data.value = value;
-        })]),
+        State("assign", [to("value", () => true, () => ({
+          machine: expression(),
+          processors: processToAssign,
+          data: {
+            type: "value",
+            value: null
+          }
+        }))]),
         State("value")
       ],
       {
@@ -154,6 +162,28 @@ module.exports = function(tokens) {
     );
   }
 
+  function expression() {
+    return Machine(
+      [
+        State(null, [
+          val("number"),
+          val("string"),
+          val("_null"),
+          val("_false"),
+          val("_true")
+        ], { initial: true }),
+        State("number"),
+        State("string"),
+        State("_null"),
+        State("_false"),
+        State("_true"),
+      ],
+      {
+        onUnsupportedTransition: onUnsupportedTransition("expression")
+      }
+    );
+  }
+
   function onUnsupportedTransition (machineName) {
     return (from, to) => {
       const t = to ? to.type : "nothing";
@@ -168,6 +198,16 @@ module.exports = function(tokens) {
       canTransite: tested => tested.type === "identifier",
       onTransition(to) {
         handler(to.value);
+      }
+    });
+  }
+
+  function val(type) {
+    return Transition({
+      to: type,
+      canTransite: tested => tested.type === type,
+      onTransition(to) {
+        stack[stack.length - 1].data.value = to.value;
       }
     });
   }
@@ -203,6 +243,10 @@ module.exports = function(tokens) {
 
   function processToIf() {
     stack[stack.length - 2].data.statements = stack[stack.length - 1].data;
+  }
+
+  function processToAssign() {
+    stack[stack.length - 2].data.value = stack[stack.length - 1].data;
   }
 
   function to(entity, canTransite, entry) {

@@ -22,7 +22,10 @@ test("simple if", function () {
                         {
                             "target": "c",
                             "type": "assign",
-                            "value": "1"
+                            "value": {
+                              "type": "value",
+                              "value": "1"
+                            }
                         }
                     ]
                 }
@@ -71,12 +74,18 @@ test("complicate if", function () {
                         {
                             "target": "a",
                             "type": "assign",
-                            "value": "false"
+                            "value": {
+                              "type": "value",
+                              "value": "false"
+                            }
                         },
                         {
                             "target": "b",
                             "type": "assign",
-                            "value": "2"
+                            "value": {
+                              "type": "value",
+                              "value": "2"
+                            }
                         }
                     ]
                 }

@@ -81,7 +81,10 @@ test("single assign", function () {
         list: [{
             type: 'assign',
             target:  'a',
-            value: '2.1'
+            value: {
+              "type": "value",
+              "value": "2.1"
+            }
         }]
     });
 });
@@ -99,17 +102,26 @@ test("multiple single assign", function () {
         {
             "target": "a",
             "type": "assign",
-            "value": "2.1"
+            "value": {
+              "type": "value",
+              "value": "2.1"
+            }
         },
         {
             "target": "a",
             "type": "assign",
-            "value": "true"
+            "value": {
+              "type": "value",
+              "value": "true"
+            }
         },
         {
             "target": "b",
             "type": "assign",
-            "value": "null"
+            "value": {
+              "type": "value",
+              "value": "null"
+            }
         }
     ]});
 });
@@ -131,7 +143,10 @@ test("variable declaration and assign", function () {
             {
                 type: 'assign',
                 target: 'a',
-                value: '4.2'
+                value: {
+                  "type": "value",
+                  "value": '4.2'
+                }
             }
         ]
     });
@@ -161,7 +176,10 @@ test("declaration and assign mix", function () {
             {
                 "target": "a",
                 "type": "assign",
-                "value": "4.2"
+                "value": {
+                  "type": "value",
+                  "value": "4.2"
+                }
             },
             {
                 "type": "variable_declaration",
@@ -175,7 +193,10 @@ test("declaration and assign mix", function () {
             {
                 "target": "b",
                 "type": "assign",
-                "value": "false"
+                "value": {
+                  "type": "value",
+                  "value": "false"
+                }
             }
         ]
     });
