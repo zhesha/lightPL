@@ -170,13 +170,15 @@ module.exports = function(tokens) {
           val("string"),
           val("_null"),
           val("_false"),
-          val("_true")
+          val("_true"),
+          val("identifier")
         ], { initial: true }),
         State("number"),
         State("string"),
         State("_null"),
         State("_false"),
         State("_true"),
+        State("identifier"),
       ],
       {
         onUnsupportedTransition: onUnsupportedTransition("expression")

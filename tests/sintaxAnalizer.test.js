@@ -71,6 +71,38 @@ test("multiple variable declaration", function () {
     );
 });
 
+test("assign variable as value", function () {
+  var sourceCode = `
+        var a = 2.1
+        var b
+        b = a
+    `;
+  var tokens = lexer(sourceCode, rules);
+  const syntaxTree = analize(tokens);
+
+  expect(syntaxTree).toEqual({
+      type: 'statement_list',
+      list: [{
+        type: 'variable_declaration',
+        variables: [{name: 'a', value: '2.1'}]
+      },
+        {
+          type: 'variable_declaration',
+          variables: [{name: 'b', value: null}]
+        },
+      {
+        target: "b",
+        type: "assign",
+        value: {
+          type: "value",
+          value: "a"
+        }
+      }
+      ]
+    }
+  );
+});
+
 test("single assign", function () {
     var sourceCode = `a = 2.1`;
     var tokens = lexer(sourceCode, rules);
