@@ -54,13 +54,11 @@ module.exports = function(tokens) {
                 variables: []
               }
             })),
-            to("assignStatement", is("identifier"), () => ({
-              machine: assignStatement(),
+            to("statement", is("identifier"), () => ({
+              machine: statement(),
               processors: processToStatement,
               data: {
-                type: "assign",
-                target: null,
-                value: null
+                type: "statement"
               }
             })),
             to("ifStatement", is("_if"), () => ({
@@ -76,7 +74,7 @@ module.exports = function(tokens) {
           { initial: true }
         ),
         State("variableDeclaration", [nextStatement]),
-        State("assignStatement", [nextStatement]),
+        State("statement", [nextStatement]),
         State("ifStatement", [nextStatement])
       ],
       {
@@ -128,19 +126,52 @@ module.exports = function(tokens) {
     );
   }
 
-  function assignStatement() {
+  function statement() {
+    const toParams = to(
+      "params",
+      () => true,
+      () => ({
+        machine: expression(),
+        processors: processToCallParams,
+        data: {
+          type: "value",
+          value: null
+        }
+      })
+    );
     return Machine(
       [
         State(
           null,
           [
             identifier(value => {
-              stack[stack.length - 1].data.target = value;
+              stack[stack.length - 1].data.tmp = value;
             })
           ],
           { initial: true }
         ),
-        State("identifier", [assign]),
+        State("identifier", [
+          Transition({
+            to: "assign",
+            canTransite: tested => tested.type === "assign",
+            onTransition: () =>
+              (stack[stack.length - 1].data = {
+                type: "assign",
+                target: stack[stack.length - 1].data.tmp,
+                value: null
+              })
+          }),
+          Transition({
+            to: "l_bracket",
+            canTransite: tested => tested.type === "l_bracket",
+            onTransition: () =>
+              (stack[stack.length - 1].data = {
+                type: "call",
+                called: stack[stack.length - 1].data.tmp,
+                params: []
+              })
+          })
+        ]),
         State("assign", [
           to(
             "value",
@@ -155,7 +186,11 @@ module.exports = function(tokens) {
             })
           )
         ]),
-        State("value")
+        State("value"),
+        State("l_bracket", [literal("r_bracket"), toParams]),
+        State("comma", [toParams]),
+        State("params", [literal("r_bracket"), comma]),
+        State("r_bracket")
       ],
       {
         onUnsupportedTransition: onUnsupportedTransition("assignStatement")
@@ -274,6 +309,10 @@ module.exports = function(tokens) {
   function processToVarDeclaration() {
     var variable = stack[stack.length - 2].data.variables;
     variable[variable.length - 1].value = stack[stack.length - 1].data;
+  }
+
+  function processToCallParams() {
+    stack[stack.length - 2].data.params.push(stack[stack.length - 1].data);
   }
 
   function to(entity, canTransite, entry) {
