@@ -102,10 +102,14 @@ module.exports = function(tokens) {
             value: null
           });
         })]),
-        State("assign", [value(value => {
-          const data = stack[stack.length - 1].data;
-          data.variables[data.variables.length - 1].value = value;
-        })]),
+        State("assign", [to("value", () => true, () => ({
+          machine: expression(),
+          processors: processToVarDeclaration,
+          data: {
+            type: "value",
+            value: null
+          }
+        }))]),
         State("value", [comma])
       ],
       {
@@ -214,24 +218,6 @@ module.exports = function(tokens) {
     });
   }
 
-  function value(handler) {
-    return Transition({
-      to: "value",
-      canTransite: tested => {
-        return (
-          tested.type === "number" ||
-          tested.type === "string" ||
-          tested.type === "_null" ||
-          tested.type === "_false" ||
-          tested.type === "_true"
-        );
-      },
-      onTransition(to) {
-        handler(to.value);
-      }
-    });
-  }
-
   function literal(to, test) {
     return Transition({
       to: to,
@@ -249,6 +235,11 @@ module.exports = function(tokens) {
 
   function processToAssign() {
     stack[stack.length - 2].data.value = stack[stack.length - 1].data;
+  }
+
+  function processToVarDeclaration() {
+    var variable = stack[stack.length - 2].data.variables;
+    variable[variable.length - 1].value = stack[stack.length - 1].data;
   }
 
   function to(entity, canTransite, entry) {

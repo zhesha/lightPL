@@ -24,7 +24,10 @@ test("single variable declaration", function () {
         list: [{
             type: 'variable_declaration',
             variables: [
-                {name: 'a', value: '2.1'}
+                {name: 'a', value: {
+                    "type": "value",
+                    "value": "2.1"
+                  }}
             ]
         }]
     });
@@ -40,8 +43,14 @@ test("multiple variable in one declaration", function () {
         list: [{
             type: 'variable_declaration',
             variables: [
-                {name: 'a', value: '2.1'},
-                {name: 'b', value: 'true'},
+                {name: 'a', value: {
+                    "type": "value",
+                    "value": "2.1"
+                  }},
+                {name: 'b', value: {
+                    "type": "value",
+                    "value": "true"
+                  }},
                 {name: 'c', value: null},
             ]
         }]
@@ -60,11 +69,17 @@ test("multiple variable declaration", function () {
             type: 'statement_list',
             list: [{
                 type: 'variable_declaration',
-                variables: [{name: 'a', value: '2.1'}]
+                variables: [{name: 'a', value: {
+                    "type": "value",
+                    "value": "2.1"
+                  }}]
             },
                 {
                     type: 'variable_declaration',
-                    variables: [{name: 'b', value: 'true'}]
+                    variables: [{name: 'b', value: {
+                        "type": "value",
+                        "value": "true"
+                      }}]
                 }
             ]
         }
@@ -84,7 +99,10 @@ test("assign variable as value", function () {
       type: 'statement_list',
       list: [{
         type: 'variable_declaration',
-        variables: [{name: 'a', value: '2.1'}]
+        variables: [{name: 'a', value: {
+            "type": "value",
+            "value": "2.1"
+          }}]
       },
         {
           type: 'variable_declaration',
@@ -170,7 +188,10 @@ test("variable declaration and assign", function () {
         type: 'statement_list',
         list: [{
             type: 'variable_declaration',
-            variables: [{name: 'a', value: '2.1'}]
+            variables: [{name: 'a', value: {
+                "type": "value",
+                "value": "2.1"
+              }}]
         },
             {
                 type: 'assign',
@@ -201,7 +222,10 @@ test("declaration and assign mix", function () {
             "variables": [
                 {
                     "name": "a",
-                    "value": "2.1"
+                    "value": {
+                      "type": "value",
+                      "value": "2.1"
+                    }
                 }
             ]
         },
@@ -218,7 +242,10 @@ test("declaration and assign mix", function () {
                 "variables": [
                     {
                         "name": "b",
-                        "value": "true"
+                        "value": {
+                          "type": "value",
+                          "value": "true"
+                        }
                     }
                 ]
             },

@@ -52,7 +52,10 @@ test("complicate if", function () {
                 "variables": [
                     {
                         "name": "a",
-                        "value": "true"
+                        "value": {
+                            "type": "value",
+                            "value": "true"
+                        }
                     }
                 ]
             },
@@ -61,7 +64,10 @@ test("complicate if", function () {
                 "variables": [
                     {
                         "name": "b",
-                        "value": "1"
+                        "value": {
+                            "type": "value",
+                            "value": "1"
+                        }
                     }
                 ]
             },
