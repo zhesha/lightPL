@@ -21,7 +21,7 @@ module.exports = function(tokens) {
     }
   });
 
-  for(let i = 0; i < tokens.length; i++) {
+  for (let i = 0; i < tokens.length; i++) {
     const token = tokens[i];
     const entity = stack[stack.length - 1];
     if (entity.machine.canTransite(token)) {
@@ -71,7 +71,7 @@ module.exports = function(tokens) {
                 condition: null,
                 statements: []
               }
-            })),
+            }))
           ],
           { initial: true }
         ),
@@ -88,28 +88,38 @@ module.exports = function(tokens) {
   function variableDeclaration() {
     return Machine(
       [
-        State(null, [_var], {initial: true}),
-        State("_var", [identifier(value => {
-          stack[stack.length - 1].data.variables.push({
-            name: value,
-            value: null
-          });
-        })]),
+        State(null, [_var], { initial: true }),
+        State("_var", [
+          identifier(value => {
+            stack[stack.length - 1].data.variables.push({
+              name: value,
+              value: null
+            });
+          })
+        ]),
         State("identifier", [assign, comma]),
-        State("comma", [identifier(value => {
-          stack[stack.length - 1].data.variables.push({
-            name: value,
-            value: null
-          });
-        })]),
-        State("assign", [to("value", () => true, () => ({
-          machine: expression(),
-          processors: processToVarDeclaration,
-          data: {
-            type: "value",
-            value: null
-          }
-        }))]),
+        State("comma", [
+          identifier(value => {
+            stack[stack.length - 1].data.variables.push({
+              name: value,
+              value: null
+            });
+          })
+        ]),
+        State("assign", [
+          to(
+            "value",
+            () => true,
+            () => ({
+              machine: expression(),
+              processors: processToVarDeclaration,
+              data: {
+                type: "value",
+                value: null
+              }
+            })
+          )
+        ]),
         State("value", [comma])
       ],
       {
@@ -118,21 +128,33 @@ module.exports = function(tokens) {
     );
   }
 
-  function assignStatement(){
+  function assignStatement() {
     return Machine(
       [
-        State(null, [identifier(value => {
-          stack[stack.length - 1].data.target = value;
-        })], { initial: true }),
+        State(
+          null,
+          [
+            identifier(value => {
+              stack[stack.length - 1].data.target = value;
+            })
+          ],
+          { initial: true }
+        ),
         State("identifier", [assign]),
-        State("assign", [to("value", () => true, () => ({
-          machine: expression(),
-          processors: processToAssign,
-          data: {
-            type: "value",
-            value: null
-          }
-        }))]),
+        State("assign", [
+          to(
+            "value",
+            () => true,
+            () => ({
+              machine: expression(),
+              processors: processToAssign,
+              data: {
+                type: "value",
+                value: null
+              }
+            })
+          )
+        ]),
         State("value")
       ],
       {
@@ -145,18 +167,26 @@ module.exports = function(tokens) {
     return Machine(
       [
         State(null, [_if], { initial: true }),
-        State("_if", [identifier(value => {
-          stack[stack.length - 1].data.condition = value;
-        })]),
+        State("_if", [
+          identifier(value => {
+            stack[stack.length - 1].data.condition = value;
+          })
+        ]),
         State("identifier", [l_brace]),
-        State("l_brace", [to("statementList", () => true, () => ({
-          machine: statementList(),
-          processors: processToIf,
-          data: {
-            type: "statement_list",
-            list: []
-          }
-        }))]),
+        State("l_brace", [
+          to(
+            "statementList",
+            () => true,
+            () => ({
+              machine: statementList(),
+              processors: processToIf,
+              data: {
+                type: "statement_list",
+                list: []
+              }
+            })
+          )
+        ]),
         State("statementList", [r_brace]),
         State("r_brace")
       ],
@@ -169,20 +199,24 @@ module.exports = function(tokens) {
   function expression() {
     return Machine(
       [
-        State(null, [
-          val("number"),
-          val("string"),
-          val("_null"),
-          val("_false"),
-          val("_true"),
-          val("identifier")
-        ], { initial: true }),
+        State(
+          null,
+          [
+            val("number"),
+            val("string"),
+            val("_null"),
+            val("_false"),
+            val("_true"),
+            val("identifier")
+          ],
+          { initial: true }
+        ),
         State("number"),
         State("string"),
         State("_null"),
         State("_false"),
         State("_true"),
-        State("identifier"),
+        State("identifier")
       ],
       {
         onUnsupportedTransition: onUnsupportedTransition("expression")
@@ -190,12 +224,12 @@ module.exports = function(tokens) {
     );
   }
 
-  function onUnsupportedTransition (machineName) {
+  function onUnsupportedTransition(machineName) {
     return (from, to) => {
       const t = to ? to.type : "nothing";
       const f = from ? from.type : "nothing";
       throw `it's error to have ${t} after ${f} in "${machineName}"`;
-    }
+    };
   }
 
   function identifier(handler) {
