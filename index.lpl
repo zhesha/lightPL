@@ -1,1 +1,1 @@
-var a = 2.1, b = true, c
+print('hello world')

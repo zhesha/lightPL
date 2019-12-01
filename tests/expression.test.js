@@ -28,8 +28,12 @@ test("function call with one param", function () {
     list: [{
       "called": "print",
       "params": [{
-        "type": "value",
-        "value": "'Hello'"
+        "type": "expression",
+        "value": {
+          "type": "value",
+          "valueType": "string",
+          "value": "'Hello'"
+        }
       }],
       "type": "call"
     }]

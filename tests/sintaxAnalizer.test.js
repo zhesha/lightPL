@@ -25,8 +25,12 @@ test("single variable declaration", function () {
             type: 'variable_declaration',
             variables: [
                 {name: 'a', value: {
-                    "type": "value",
-                    "value": "2.1"
+                    "type": "expression",
+                    "value": {
+                      "type": "value",
+                      "valueType": "number",
+                      "value": "2.1"
+                    }
                   }}
             ]
         }]
@@ -44,12 +48,20 @@ test("multiple variable in one declaration", function () {
             type: 'variable_declaration',
             variables: [
                 {name: 'a', value: {
-                    "type": "value",
-                    "value": "2.1"
+                    "type": "expression",
+                    "value": {
+                      "type": "value",
+                      "valueType": "number",
+                      "value": "2.1"
+                    }
                   }},
                 {name: 'b', value: {
-                    "type": "value",
-                    "value": "true"
+                    "type": "expression",
+                    "value": {
+                      "type": "value",
+                      "valueType": "_true",
+                      "value": "true"
+                    }
                   }},
                 {name: 'c', value: null},
             ]
@@ -70,15 +82,23 @@ test("multiple variable declaration", function () {
             list: [{
                 type: 'variable_declaration',
                 variables: [{name: 'a', value: {
-                    "type": "value",
-                    "value": "2.1"
+                    "type": "expression",
+                    "value": {
+                      "type": "value",
+                      "valueType": "number",
+                      "value": "2.1"
+                    }
                   }}]
             },
                 {
                     type: 'variable_declaration',
                     variables: [{name: 'b', value: {
-                        "type": "value",
-                        "value": "true"
+                        "type": "expression",
+                        "value": {
+                          "type": "value",
+                          "valueType": "_true",
+                          "value": "true"
+                        }
                       }}]
                 }
             ]
@@ -100,8 +120,12 @@ test("assign variable as value", function () {
       list: [{
         type: 'variable_declaration',
         variables: [{name: 'a', value: {
-            "type": "value",
-            "value": "2.1"
+            "type": "expression",
+            "value": {
+              "type": "value",
+              "valueType": "number",
+              "value": "2.1"
+            }
           }}]
       },
         {
@@ -112,8 +136,12 @@ test("assign variable as value", function () {
         target: "b",
         type: "assign",
         value: {
-          type: "value",
-          value: "a"
+          "type": "expression",
+          "value": {
+            "type": "variable",
+            "valueType": "identifier",
+            "value": "a"
+          }
         }
       }
       ]
@@ -132,8 +160,12 @@ test("single assign", function () {
             type: 'assign',
             target:  'a',
             value: {
-              "type": "value",
-              "value": "2.1"
+              "type": "expression",
+              "value": {
+                "type": "value",
+                "valueType": "number",
+                "value": "2.1"
+              }
             }
         }]
     });
@@ -153,24 +185,36 @@ test("multiple single assign", function () {
             "target": "a",
             "type": "assign",
             "value": {
-              "type": "value",
-              "value": "2.1"
+              "type": "expression",
+              "value": {
+                "type": "value",
+                "valueType": "number",
+                "value": "2.1"
+              }
             }
         },
         {
             "target": "a",
             "type": "assign",
             "value": {
-              "type": "value",
-              "value": "true"
+              "type": "expression",
+              "value": {
+                "type": "value",
+                "valueType": "_true",
+                "value": "true"
+              }
             }
         },
         {
             "target": "b",
             "type": "assign",
             "value": {
-              "type": "value",
-              "value": "null"
+              "type": "expression",
+              "value": {
+                "type": "value",
+                "valueType": "_null",
+                "value": "null"
+              }
             }
         }
     ]});
@@ -189,16 +233,24 @@ test("variable declaration and assign", function () {
         list: [{
             type: 'variable_declaration',
             variables: [{name: 'a', value: {
-                "type": "value",
-                "value": "2.1"
+                "type": "expression",
+                "value": {
+                  "type": "value",
+                  "valueType": "number",
+                  "value": "2.1"
+                }
               }}]
         },
             {
                 type: 'assign',
                 target: 'a',
                 value: {
-                  "type": "value",
-                  "value": '4.2'
+                  "type": "expression",
+                  "value": {
+                    "type": "value",
+                    "valueType": "number",
+                    "value": "4.2"
+                  }
                 }
             }
         ]
@@ -223,8 +275,12 @@ test("declaration and assign mix", function () {
                 {
                     "name": "a",
                     "value": {
-                      "type": "value",
-                      "value": "2.1"
+                      "type": "expression",
+                      "value": {
+                        "type": "value",
+                        "valueType": "number",
+                        "value": "2.1"
+                      }
                     }
                 }
             ]
@@ -233,8 +289,12 @@ test("declaration and assign mix", function () {
                 "target": "a",
                 "type": "assign",
                 "value": {
-                  "type": "value",
-                  "value": "4.2"
+                  "type": "expression",
+                  "value": {
+                    "type": "value",
+                    "valueType": "number",
+                    "value": "4.2"
+                  }
                 }
             },
             {
@@ -243,8 +303,12 @@ test("declaration and assign mix", function () {
                     {
                         "name": "b",
                         "value": {
-                          "type": "value",
-                          "value": "true"
+                          "type": "expression",
+                          "value": {
+                            "type": "value",
+                            "valueType": "_true",
+                            "value": "true"
+                          }
                         }
                     }
                 ]
@@ -253,8 +317,12 @@ test("declaration and assign mix", function () {
                 "target": "b",
                 "type": "assign",
                 "value": {
-                  "type": "value",
-                  "value": "false"
+                  "type": "expression",
+                  "value": {
+                    "type": "value",
+                    "valueType": "_false",
+                    "value": "false"
+                  }
                 }
             }
         ]

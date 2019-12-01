@@ -23,8 +23,12 @@ test("simple if", function () {
                             "target": "c",
                             "type": "assign",
                             "value": {
-                              "type": "value",
-                              "value": "1"
+                              "type": "expression",
+                              "value": {
+                                "type": "value",
+                                "valueType": "number",
+                                "value": "1"
+                              }
                             }
                         }
                     ]
@@ -53,8 +57,12 @@ test("complicate if", function () {
                     {
                         "name": "a",
                         "value": {
+                          "type": "expression",
+                          "value": {
                             "type": "value",
+                            "valueType": "_true",
                             "value": "true"
+                          }
                         }
                     }
                 ]
@@ -65,8 +73,12 @@ test("complicate if", function () {
                     {
                         "name": "b",
                         "value": {
+                          "type": "expression",
+                          "value": {
                             "type": "value",
+                            "valueType": "number",
                             "value": "1"
+                          }
                         }
                     }
                 ]
@@ -81,16 +93,24 @@ test("complicate if", function () {
                             "target": "a",
                             "type": "assign",
                             "value": {
-                              "type": "value",
-                              "value": "false"
+                              "type": "expression",
+                              "value": {
+                                "type": "value",
+                                "valueType": "_false",
+                                "value": "false"
+                              }
                             }
                         },
                         {
                             "target": "b",
                             "type": "assign",
                             "value": {
-                              "type": "value",
-                              "value": "2"
+                              "type": "expression",
+                              "value": {
+                                "type": "value",
+                                "valueType": "number",
+                                "value": "2"
+                              }
                             }
                         }
                     ]

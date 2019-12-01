@@ -112,7 +112,7 @@ module.exports = function(tokens) {
               machine: expression(),
               processors: processToVarDeclaration,
               data: {
-                type: "value",
+                type: "expression",
                 value: null
               }
             })
@@ -134,7 +134,7 @@ module.exports = function(tokens) {
         machine: expression(),
         processors: processToCallParams,
         data: {
-          type: "value",
+          type: "expression",
           value: null
         }
       })
@@ -180,7 +180,7 @@ module.exports = function(tokens) {
               machine: expression(),
               processors: processToAssign,
               data: {
-                type: "value",
+                type: "expression",
                 value: null
               }
             })
@@ -237,12 +237,12 @@ module.exports = function(tokens) {
         State(
           null,
           [
-            val("number"),
-            val("string"),
-            val("_null"),
-            val("_false"),
-            val("_true"),
-            val("identifier")
+            val("number", 'value'),
+            val("string", 'value'),
+            val("_null", 'value'),
+            val("_false", 'value'),
+            val("_true", 'value'),
+            val("identifier", 'variable')
           ],
           { initial: true }
         ),
@@ -277,12 +277,16 @@ module.exports = function(tokens) {
     });
   }
 
-  function val(type) {
+  function val(type, valueType) {
     return Transition({
       to: type,
       canTransite: tested => tested.type === type,
       onTransition(to) {
-        stack[stack.length - 1].data.value = to.value;
+        stack[stack.length - 1].data.value = {
+          type: valueType,
+          valueType: to.type,
+          value: to.value
+        };
       }
     });
   }
