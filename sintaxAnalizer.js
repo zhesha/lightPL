@@ -203,11 +203,20 @@ module.exports = function(tokens) {
       [
         State(null, [_if], { initial: true }),
         State("_if", [
-          identifier(value => {
-            stack[stack.length - 1].data.condition = value;
-          })
+          to(
+            "condition",
+            () => true,
+            () => ({
+              machine: expression(),
+              processors: processToCondition,
+              data: {
+                type: "expression",
+                value: null
+              }
+            })
+          )
         ]),
-        State("identifier", [l_brace]),
+        State("condition", [l_brace]),
         State("l_brace", [
           to(
             "statementList",
@@ -313,6 +322,10 @@ module.exports = function(tokens) {
   function processToVarDeclaration() {
     var variable = stack[stack.length - 2].data.variables;
     variable[variable.length - 1].value = stack[stack.length - 1].data;
+  }
+
+  function processToCondition() {
+    stack[stack.length - 2].data.condition = stack[stack.length - 1].data;
   }
 
   function processToCallParams() {

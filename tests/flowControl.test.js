@@ -15,7 +15,14 @@ test("simple if", function () {
         "list": [
             {
                 "type": "if",
-                "condition": "open",
+                "condition": {
+                  "type": "expression",
+                  "value": {
+                    "type": "variable",
+                    "value": "open",
+                    "valueType": "identifier"
+                  }
+                },
                 "statements": {
                     "type": "statement_list",
                     "list": [
@@ -85,7 +92,14 @@ test("complicate if", function () {
             },
             {
                 "type": "if",
-                "condition": "a",
+                "condition": {
+                  "type": "expression",
+                  "value": {
+                    "type": "variable",
+                    "value": "a",
+                    "valueType": "identifier"
+                  }
+                },
                 "statements": {
                     "type": "statement_list",
                     "list": [
