@@ -54,13 +54,6 @@ module.exports = function(tokens) {
                 variables: []
               }
             })),
-            to("statement", is("identifier"), () => ({
-              machine: statement(),
-              processors: processToStatement,
-              data: {
-                type: "statement"
-              }
-            })),
             to("ifStatement", is("_if"), () => ({
               machine: ifStatement(),
               processors: processToStatement,
@@ -69,7 +62,14 @@ module.exports = function(tokens) {
                 condition: null,
                 statements: []
               }
-            }))
+            })),
+            to("statement", is("identifier"), () => ({
+              machine: statement(),
+              processors: processToStatement,
+              data: {
+                type: "statement"
+              }
+            })),
           ],
           { initial: true }
         ),
@@ -113,7 +113,7 @@ module.exports = function(tokens) {
               processors: processToVarDeclaration,
               data: {
                 type: "expression",
-                value: null
+                sequence: []
               }
             })
           )
@@ -135,7 +135,7 @@ module.exports = function(tokens) {
         processors: processToCallParams,
         data: {
           type: "expression",
-          value: null
+          sequence: []
         }
       })
     );
@@ -181,7 +181,7 @@ module.exports = function(tokens) {
               processors: processToAssign,
               data: {
                 type: "expression",
-                value: null
+                sequence: []
               }
             })
           )
@@ -211,7 +211,7 @@ module.exports = function(tokens) {
               processors: processToCondition,
               data: {
                 type: "expression",
-                value: null
+                sequence: []
               }
             })
           )
@@ -241,6 +241,155 @@ module.exports = function(tokens) {
   }
 
   function expression() {
+    return Machine(
+      [
+        State(
+          null,
+          [
+            Transition({
+              to: 'unary_operator',
+              canTransite: to => to.type === 'operator' && (to.value === '-' || to.value === '!'),
+              onTransition: to => stack[stack.length - 1].data.sequence.push(
+                {
+                  type: 'unary_operator',
+                  operator: to.value
+                }
+              )
+            }),
+            Transition({
+              to: 'parenting',
+              canTransite: to => to.type === 'l_bracket',
+              onTransition: to => stack[stack.length - 1].data.sequence.push(
+                {
+                  type: 'operand',
+                  operandType: 'parenting',
+                  value: null
+                }
+              )
+            }),
+            to(
+              "operand",
+              () => true,
+              () => ({
+                machine: expression1(),
+                processors: processToExpression,
+                data: {
+                  type: "operand",
+                  operandType: 'value',
+                  value: null
+                }
+              })
+            )
+          ],
+          { initial: true }
+        ),
+        State('unary_operator', [
+          Transition({
+            to: 'parenting',
+            canTransite: to => to.type === 'l_bracket',
+            onTransition: to => stack[stack.length - 1].data.sequence.push(
+              {
+                type: 'operand',
+                operandType: 'parenting',
+                value: null
+              }
+            )
+          }),
+          to(
+            "operand",
+            () => true,
+            () => ({
+              machine: expression1(),
+              processors: processToExpression,
+              data: {
+                type: "operand",
+                operandType: 'value',
+                value: null
+              }
+            })
+          )
+        ]),
+        State('parenting', [
+          to(
+            "expression",
+            () => true,
+            () => ({
+              machine: expression(),
+              processors: processToParenting,
+              data: {
+                type: "expression",
+                sequence: []
+              }
+            })
+          )
+        ]),
+        State('operand', [
+          Transition({
+            to: 'operator',
+            canTransite: to => to.type === 'operator',
+            onTransition: to => stack[stack.length - 1].data.sequence.push(
+              {
+                type: 'operator',
+                operator: to.value
+              }
+            )
+          })
+        ]),
+        State('expression', [
+          Transition({
+            to: 'operand',
+            canTransite: to => {
+              const sequence = stack[stack.length - 1].data.sequence;
+              const last = sequence[sequence.length - 1];
+              return to.type === 'r_bracket' && last.type === 'operand' && last.operandType === 'parenting';
+            },
+          })
+        ]),
+        State('operator', [
+          Transition({
+            to: 'unary_operator',
+            canTransite: to => to.type === 'operator' && (to.value === '-' || to.value === '!'),
+            onTransition: to => stack[stack.length - 1].data.sequence.push(
+              {
+                type: 'unary_operator',
+                operator: to.value
+              }
+            )
+          }),
+          Transition({
+            to: 'parenting',
+            canTransite: to => to.type === 'l_bracket',
+            onTransition: to => stack[stack.length - 1].data.sequence.push(
+              {
+                type: 'operand',
+                operandType: 'parenting',
+                value: null
+              }
+            )
+          }),
+          to(
+            "operand",
+            () => true,
+            () => ({
+              machine: expression1(),
+              processors: processToExpression,
+              data: {
+                type: "operand",
+                operandType: 'value',
+                value: null
+              }
+            })
+          )
+          ]
+        ),
+      ],
+      {
+        onUnsupportedTransition: onUnsupportedTransition("expression")
+      }
+    );
+  }
+
+  function expression1() {
     return Machine(
       [
         State(
@@ -330,6 +479,15 @@ module.exports = function(tokens) {
 
   function processToCallParams() {
     stack[stack.length - 2].data.params.push(stack[stack.length - 1].data);
+  }
+
+  function processToExpression() {
+    stack[stack.length - 2].data.sequence.push(stack[stack.length - 1].data);
+  }
+
+  function processToParenting() {
+    const sequence = stack[stack.length - 2].data.sequence;
+    sequence[sequence.length - 1].value = stack[stack.length - 1].data;
   }
 
   function to(entity, canTransite, entry) {

@@ -4,7 +4,6 @@ var rules = require("./rules.js");
 var analize = require("./sintaxAnalizer.js");
 var lexer = lexerjs.lexer;
 
-console.log(process.argv);
 // process.argv
 // /usr/local/bin
 
