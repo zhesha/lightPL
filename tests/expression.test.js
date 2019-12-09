@@ -33,11 +33,13 @@ test("function call with one param", function () {
           {
             "operandType": "value",
             "type": "operand",
-            "value": {
-              "type": "value",
-              "value": "'Hello'",
-              "valueType": "string"
-            }
+            "sequence": [
+              {
+                "type": "value",
+                "value": "'Hello'",
+                "valueType": "string"
+              }
+            ]
           }
         ],
       }],
@@ -62,11 +64,13 @@ test("operator", function () {
             {
               "operandType": "value",
               "type": "operand",
-              "value": {
-                "type": "value",
-                "value": "2",
-                "valueType": "number"
-              }
+              "sequence": [
+                {
+                  "type": "value",
+                  "value": "2",
+                  "valueType": "number"
+                }
+              ]
             },
             {
               "operator": "+",
@@ -75,11 +79,13 @@ test("operator", function () {
             {
               "operandType": "value",
               "type": "operand",
-              "value": {
-                "type": "value",
-                "value": "2",
-                "valueType": "number"
-              }
+              "sequence": [
+                {
+                  "type": "value",
+                  "value": "2",
+                  "valueType": "number"
+                }
+              ]
             }
           ],
           "type": "expression"
@@ -108,11 +114,13 @@ test("unary operator", function () {
           {
             "operandType": "value",
             "type": "operand",
-            "value": {
-              "type": "value",
-              "value": "2",
-              "valueType": "number"
-            }
+            "sequence": [
+              {
+                "type": "value",
+                "value": "2",
+                "valueType": "number"
+              }
+            ]
           }
         ],
         "type": "expression"
@@ -136,11 +144,13 @@ test("multiple operator", function () {
           {
             "operandType": "value",
             "type": "operand",
-            "value": {
-              "type": "value",
-              "value": "2",
-              "valueType": "number"
-            }
+            "sequence": [
+              {
+                "type": "value",
+                "value": "2",
+                "valueType": "number"
+              }
+            ]
           },
           {
             "operator": "+",
@@ -149,11 +159,13 @@ test("multiple operator", function () {
           {
             "operandType": "value",
             "type": "operand",
-            "value": {
-              "type": "value",
-              "value": "2",
-              "valueType": "number"
-            }
+            "sequence": [
+              {
+                "type": "value",
+                "value": "2",
+                "valueType": "number"
+              }
+            ]
           },
           {
             "operator": "*",
@@ -162,11 +174,13 @@ test("multiple operator", function () {
           {
             "operandType": "value",
             "type": "operand",
-            "value": {
-              "type": "value",
-              "value": "2",
-              "valueType": "number"
-            }
+            "sequence": [
+              {
+                "type": "value",
+                "value": "2",
+                "valueType": "number"
+              }
+            ]
           }
         ],
         "type": "expression"
@@ -195,11 +209,13 @@ test("parenting", function () {
                 {
                   "operandType": "value",
                   "type": "operand",
-                  "value": {
-                    "type": "value",
-                    "value": "2",
-                    "valueType": "number"
-                  }
+                  "sequence": [
+                    {
+                      "type": "value",
+                      "value": "2",
+                      "valueType": "number"
+                    }
+                  ]
                 },
                 {
                   "operator": "+",
@@ -208,11 +224,13 @@ test("parenting", function () {
                 {
                   "operandType": "value",
                   "type": "operand",
-                  "value": {
-                    "type": "value",
-                    "value": "2",
-                    "valueType": "number"
-                  }
+                  "sequence": [
+                    {
+                      "type": "value",
+                      "value": "2",
+                      "valueType": "number"
+                    }
+                  ]
                 }
               ],
               "type": "expression"
@@ -225,11 +243,13 @@ test("parenting", function () {
           {
             "operandType": "value",
             "type": "operand",
-            "value": {
-              "type": "value",
-              "value": "2",
-              "valueType": "number"
-            }
+            "sequence": [
+              {
+                "type": "value",
+                "value": "2",
+                "valueType": "number"
+              }
+            ]
           }
         ],
         "type": "expression"

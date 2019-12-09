@@ -30,11 +30,13 @@ test("single variable declaration", function () {
                       {
                         "operandType": "value",
                         "type": "operand",
-                        "value": {
-                          "type": "value",
-                          "value": "2.1",
-                          "valueType": "number"
-                        }
+                        "sequence": [
+                          {
+                            "type": "value",
+                            "value": "2.1",
+                            "valueType": "number"
+                          }
+                        ],
                       }
                     ],
                   }}
@@ -59,11 +61,13 @@ test("multiple variable in one declaration", function () {
                       {
                         "operandType": "value",
                         "type": "operand",
-                        "value": {
-                          "type": "value",
-                          "value": "2.1",
-                          "valueType": "number"
-                        }
+                        "sequence": [
+                          {
+                            "type": "value",
+                            "value": "2.1",
+                            "valueType": "number"
+                          }
+                        ],
                       }
                     ],
                   }},
@@ -73,11 +77,13 @@ test("multiple variable in one declaration", function () {
                       {
                         "operandType": "value",
                         "type": "operand",
-                        "value": {
-                          "type": "value",
-                          "value": "true",
-                          "valueType": "_true"
-                        }
+                        "sequence": [
+                          {
+                            "type": "value",
+                            "value": "true",
+                            "valueType": "_true"
+                          }
+                        ],
                       }
                     ],
                   }},
@@ -105,11 +111,13 @@ test("multiple variable declaration", function () {
                       {
                         "operandType": "value",
                         "type": "operand",
-                        "value": {
-                          "type": "value",
-                          "value": "2.1",
-                          "valueType": "number"
-                        }
+                        "sequence": [
+                          {
+                            "type": "value",
+                            "value": "2.1",
+                            "valueType": "number"
+                          }
+                        ]
                       }
                     ],
                   }}]
@@ -122,11 +130,13 @@ test("multiple variable declaration", function () {
                           {
                             "operandType": "value",
                             "type": "operand",
-                            "value": {
-                              "type": "value",
-                              "value": "true",
-                              "valueType": "_true"
-                            }
+                            "sequence": [
+                              {
+                                "type": "value",
+                                "value": "true",
+                                "valueType": "_true"
+                              }
+                            ]
                           }
                         ],
                       }}]
@@ -155,11 +165,13 @@ test("assign variable as value", function () {
               {
                 "operandType": "value",
                 "type": "operand",
-                "value": {
-                  "type": "value",
-                  "value": "2.1",
-                  "valueType": "number"
-                }
+                "sequence": [
+                  {
+                    "type": "value",
+                    "value": "2.1",
+                    "valueType": "number"
+                  }
+                ]
               }
             ],
           }}]
@@ -177,11 +189,13 @@ test("assign variable as value", function () {
             {
               "operandType": "value",
               "type": "operand",
-              "value": {
-                "type": "variable",
-                "value": "a",
-                "valueType": "identifier"
-              }
+              "sequence": [
+                {
+                  "type": "value",
+                  "value": "a",
+                  "valueType": "variable"
+                }
+              ]
             }
           ],
         }
@@ -207,11 +221,13 @@ test("single assign", function () {
                 {
                   "operandType": "value",
                   "type": "operand",
-                  "value": {
-                    "type": "value",
-                    "value": "2.1",
-                    "valueType": "number"
-                  }
+                  "sequence": [
+                    {
+                      "type": "value",
+                      "value": "2.1",
+                      "valueType": "number"
+                    }
+                  ]
                 }
               ],
             }
@@ -238,11 +254,13 @@ test("multiple single assign", function () {
                 {
                   "operandType": "value",
                   "type": "operand",
-                  "value": {
-                    "type": "value",
-                    "value": "2.1",
-                    "valueType": "number"
-                  }
+                  "sequence": [
+                    {
+                      "type": "value",
+                      "value": "2.1",
+                      "valueType": "number"
+                    }
+                  ]
                 }
               ],
             }
@@ -256,11 +274,13 @@ test("multiple single assign", function () {
                 {
                   "operandType": "value",
                   "type": "operand",
-                  "value": {
-                    "type": "value",
-                    "value": "true",
-                    "valueType": "_true"
-                  }
+                  "sequence": [
+                    {
+                      "type": "value",
+                      "value": "true",
+                      "valueType": "_true"
+                    }
+                  ]
                 }
               ]
             }
@@ -274,11 +294,13 @@ test("multiple single assign", function () {
                 {
                   "operandType": "value",
                   "type": "operand",
-                  "value": {
-                    "type": "value",
-                    "value": "null",
-                    "valueType": "_null"
-                  }
+                  "sequence": [
+                    {
+                      "type": "value",
+                      "value": "null",
+                      "valueType": "_null"
+                    }
+                  ]
                 }
               ]
             }
@@ -304,11 +326,13 @@ test("variable declaration and assign", function () {
                   {
                     "operandType": "value",
                     "type": "operand",
-                    "value": {
-                      "type": "value",
-                      "value": "2.1",
-                      "valueType": "number"
-                    }
+                    "sequence": [
+                      {
+                        "type": "value",
+                        "value": "2.1",
+                        "valueType": "number"
+                      }
+                    ]
                   }
                 ],
               }}]
@@ -322,11 +346,13 @@ test("variable declaration and assign", function () {
                     {
                       "operandType": "value",
                       "type": "operand",
-                      "value": {
-                        "type": "value",
-                        "value": "4.2",
-                        "valueType": "number"
-                      }
+                      "sequence": [
+                        {
+                          "type": "value",
+                          "value": "4.2",
+                          "valueType": "number"
+                        }
+                      ]
                     }
                   ],
                 }
@@ -358,11 +384,13 @@ test("declaration and assign mix", function () {
                         {
                           "operandType": "value",
                           "type": "operand",
-                          "value": {
-                            "type": "value",
-                            "value": "2.1",
-                            "valueType": "number"
-                          }
+                          "sequence": [
+                            {
+                              "type": "value",
+                              "value": "2.1",
+                              "valueType": "number"
+                            }
+                          ]
                         }
                       ],
                     }
@@ -378,11 +406,13 @@ test("declaration and assign mix", function () {
                     {
                       "operandType": "value",
                       "type": "operand",
-                      "value": {
-                        "type": "value",
-                        "value": "4.2",
-                        "valueType": "number"
-                      }
+                      "sequence": [
+                        {
+                          "type": "value",
+                          "value": "4.2",
+                          "valueType": "number"
+                        }
+                      ]
                     }
                   ],
                 }
@@ -398,11 +428,13 @@ test("declaration and assign mix", function () {
                             {
                               "operandType": "value",
                               "type": "operand",
-                              "value": {
-                                "type": "value",
-                                "value": "true",
-                                "valueType": "_true"
-                              }
+                              "sequence": [
+                                {
+                                  "type": "value",
+                                  "value": "true",
+                                  "valueType": "_true"
+                                }
+                              ]
                             }
                           ],
                         }
@@ -418,11 +450,13 @@ test("declaration and assign mix", function () {
                     {
                       "operandType": "value",
                       "type": "operand",
-                      "value": {
-                        "type": "value",
-                        "value": "false",
-                        "valueType": "_false"
-                      }
+                      "sequence": [
+                        {
+                          "type": "value",
+                          "value": "false",
+                          "valueType": "_false"
+                        }
+                      ]
                     }
                   ],
                 }

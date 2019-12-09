@@ -21,11 +21,13 @@ test("simple if", function () {
                     {
                       "operandType": "value",
                       "type": "operand",
-                      "value": {
-                        "type": "variable",
-                        "value": "open",
-                        "valueType": "identifier"
-                      }
+                      "sequence": [
+                        {
+                          "type": "value",
+                          "value": "open",
+                          "valueType": "variable"
+                        }
+                      ]
                     }
                   ],
                 },
@@ -41,11 +43,13 @@ test("simple if", function () {
                                 {
                                   "operandType": "value",
                                   "type": "operand",
-                                  "value": {
-                                    "type": "value",
-                                    "value": "1",
-                                    "valueType": "number"
-                                  }
+                                  "sequence": [
+                                    {
+                                      "type": "value",
+                                      "value": "1",
+                                      "valueType": "number"
+                                    }
+                                  ]
                                 }
                               ],
                             }
@@ -81,11 +85,13 @@ test("complicate if", function () {
                             {
                               "operandType": "value",
                               "type": "operand",
-                              "value": {
-                                "type": "value",
-                                "value": "true",
-                                "valueType": "_true"
-                              }
+                              "sequence": [
+                                {
+                                  "type": "value",
+                                  "value": "true",
+                                  "valueType": "_true"
+                                }
+                              ]
                             }
                           ],
                         }
@@ -103,11 +109,13 @@ test("complicate if", function () {
                             {
                               "operandType": "value",
                               "type": "operand",
-                              "value": {
-                                "type": "value",
-                                "value": "1",
-                                "valueType": "number"
-                              }
+                              "sequence": [
+                                {
+                                  "type": "value",
+                                  "value": "1",
+                                  "valueType": "number"
+                                }
+                              ]
                             }
                           ],
                         }
@@ -122,11 +130,13 @@ test("complicate if", function () {
                     {
                       "operandType": "value",
                       "type": "operand",
-                      "value": {
-                        "type": "variable",
-                        "value": "a",
-                        "valueType": "identifier"
-                      }
+                      "sequence": [
+                        {
+                          "type": "value",
+                          "value": "a",
+                          "valueType": "variable"
+                        }
+                      ]
                     }
                   ],
                 },
@@ -142,11 +152,13 @@ test("complicate if", function () {
                                 {
                                   "operandType": "value",
                                   "type": "operand",
-                                  "value": {
-                                    "type": "value",
-                                    "value": "false",
-                                    "valueType": "_false"
-                                  }
+                                  "sequence": [
+                                    {
+                                      "type": "value",
+                                      "value": "false",
+                                      "valueType": "_false"
+                                    }
+                                  ]
                                 }
                               ],
                             }
@@ -160,11 +172,13 @@ test("complicate if", function () {
                                 {
                                   "operandType": "value",
                                   "type": "operand",
-                                  "value": {
-                                    "type": "value",
-                                    "value": "2",
-                                    "valueType": "number"
-                                  }
+                                  "sequence": [
+                                    {
+                                      "type": "value",
+                                      "value": "2",
+                                      "valueType": "number"
+                                    }
+                                  ]
                                 }
                               ],
                             }
