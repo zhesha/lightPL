@@ -615,14 +615,178 @@ module.exports = function(tokens) {
           to: 'dictionary_colon',
           canTransite: to => to.type === 'colon'
         })]),
+        State("number", [
+          Transition({
+            to: 'dot',
+            canTransite: to => to.type === 'dot',
+            onTransition: to => {
+              const sequence = stack[stack.length - 1].data.sequence;
+              sequence.push({
+                type: 'refinement',
+                refinementType: 'dot'
+              });
+            }
+          })
+        ]),
+        State("string",[
+          Transition({
+            to: 'dot',
+            canTransite: to => to.type === 'dot',
+            onTransition: to => {
+              const sequence = stack[stack.length - 1].data.sequence;
+              sequence.push({
+                type: 'refinement',
+                refinementType: 'dot'
+              });
+            }
+          })
+        ]),
+        State("_null",[
+          Transition({
+            to: 'dot',
+            canTransite: to => to.type === 'dot',
+            onTransition: to => {
+              const sequence = stack[stack.length - 1].data.sequence;
+              sequence.push({
+                type: 'refinement',
+                refinementType: 'dot'
+              });
+            }
+          })
+        ]),
+        State("_false",[
+          Transition({
+            to: 'dot',
+            canTransite: to => to.type === 'dot',
+            onTransition: to => {
+              const sequence = stack[stack.length - 1].data.sequence;
+              sequence.push({
+                type: 'refinement',
+                refinementType: 'dot'
+              });
+            }
+          })
+        ]),
+        State("_true",[
+          Transition({
+            to: 'dot',
+            canTransite: to => to.type === 'dot',
+            onTransition: to => {
+              const sequence = stack[stack.length - 1].data.sequence;
+              sequence.push({
+                type: 'refinement',
+                refinementType: 'dot'
+              });
+            }
+          })
+        ]),
+        State("collection_end",[
+          Transition({
+            to: 'dot',
+            canTransite: to => to.type === 'dot',
+            onTransition: to => {
+              const sequence = stack[stack.length - 1].data.sequence;
+              sequence.push({
+                type: 'refinement',
+                refinementType: 'dot'
+              });
+            }
+          })
+        ]),
+        State("variable", [
+          Transition({
+            to: 'dot',
+            canTransite: to => to.type === 'dot',
+            onTransition: to => {
+              const sequence = stack[stack.length - 1].data.sequence;
+              sequence.push({
+                type: 'refinement',
+                refinementType: 'dot'
+              });
+            }
+          }),
+          Transition({
+            to: 'collection_refinement',
+            canTransite: to => to.type === 'l_square_bracket',
+            onTransition: to => {
+              const sequence = stack[stack.length - 1].data.sequence;
+              sequence.push({
+                type: 'refinement',
+                refinementType: 'collection_refinement',
+                key: null
+              });
+            }
+          }),
+          Transition({
+            to: 'call',
+            canTransite: to => to.type === 'l_bracket',
+            onTransition: to => {
+              const sequence = stack[stack.length - 1].data.sequence;
+              sequence.push({
+                type: 'refinement',
+                refinementType: 'call',
+                params: []
+              });
+            }
+          })
+        ]),
+        State("dot", [Transition({
+          to: 'variable',
+          canTransite: to => to.type === 'identifier',
+          onTransition: to => stack[stack.length - 1].data.sequence.push(
+            {
+              type: 'value',
+              valueType: 'variable',
+              value: to.value
+            }
+          )
+        })]),
+        State("collection_refinement", [
+          to(
+            "collection_key",
+            () => true,
+            () => ({
+              machine: expression(),
+              processors: processToCollectionRefinement,
+              data: {
+                type: "expression",
+                sequence: []
+              }
+            })
+          )
+        ]),
+        State("collection_key", [
+          Transition({
+            to: 'collection_refinement_end',
+            canTransite: to => to.type === 'r_square_bracket'
+          })
+        ]),
+        State("collection_refinement_end", [
+          Transition({
+            to: 'dot',
+            canTransite: to => to.type === 'dot',
+            onTransition: to => {
+              const sequence = stack[stack.length - 1].data.sequence;
+              sequence.push({
+                type: 'refinement',
+                refinementType: 'dot'
+              });
+            }
+          }),
+          Transition({
+            to: 'collection_refinement',
+            canTransite: to => to.type === 'l_square_bracket',
+            onTransition: to => {
+              const sequence = stack[stack.length - 1].data.sequence;
+              sequence.push({
+                type: 'refinement',
+                refinementType: 'collection_refinement',
+                key: null
+              });
+            }
+          })]),
         // TODO
-        State("collection_end"),
-        State("number"),
-        State("string"),
-        State("_null"),
-        State("_false"),
-        State("_true"),
-        State("variable"),
+        State("call", []),
       ],
       {
         onUnsupportedTransition: onUnsupportedTransition("refinement")
@@ -701,6 +865,12 @@ module.exports = function(tokens) {
   function processToParenting() {
     const sequence = stack[stack.length - 2].data.sequence;
     sequence[sequence.length - 1].value = stack[stack.length - 1].data;
+  }
+
+  function processToCollectionRefinement() {
+    const sequence = stack[stack.length - 2].data.sequence;
+    const last = sequence[sequence.length - 1];
+    last.key = stack[stack.length - 1].data;
   }
 
   function processToArray() {

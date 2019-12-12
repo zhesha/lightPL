@@ -117,6 +117,8 @@ var rules = [
     name: 'number',
     tester: function (tested) {
       if(/^\d+\.$/.test(tested)) {
+        // TODO why start doesn't work?
+        // try 1.
         return lexerResults.start;
       }
       if(/^\d+(\.\d+)?$/.test(tested)) {
