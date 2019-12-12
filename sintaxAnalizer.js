@@ -785,8 +785,59 @@ module.exports = function(tokens) {
               });
             }
           })]),
-        // TODO
-        State("call", []),
+        State("call", [
+          Transition({
+            to: 'call_end',
+            canTransite: to => to.type === 'r_bracket',
+          }),
+          to(
+            "parameter",
+            () => true,
+            () => ({
+              machine: expression(),
+              processors: processToCallParamsList,
+              data: {
+                type: "expression",
+                sequence: []
+              }
+            })
+          )
+        ]),
+        State("call_end", [
+          Transition({
+            to: 'dot',
+            canTransite: to => to.type === 'dot',
+            onTransition: to => {
+              const sequence = stack[stack.length - 1].data.sequence;
+              sequence.push({
+                type: 'refinement',
+                refinementType: 'dot'
+              });
+            }
+          }),
+          Transition({
+            to: 'collection_refinement',
+            canTransite: to => to.type === 'l_square_bracket',
+            onTransition: to => {
+              const sequence = stack[stack.length - 1].data.sequence;
+              sequence.push({
+                type: 'refinement',
+                refinementType: 'collection_refinement',
+                key: null
+              });
+            }
+          })]),
+
+        State("parameter", [
+          Transition({
+            to: 'call_end',
+            canTransite: to => to.type === 'r_bracket',
+          }),
+          Transition({
+            to: 'call',
+            canTransite: to => to.type === 'comma',
+          }),
+        ]),
       ],
       {
         onUnsupportedTransition: onUnsupportedTransition("refinement")
@@ -871,6 +922,12 @@ module.exports = function(tokens) {
     const sequence = stack[stack.length - 2].data.sequence;
     const last = sequence[sequence.length - 1];
     last.key = stack[stack.length - 1].data;
+  }
+
+  function processToCallParamsList() {
+    const sequence = stack[stack.length - 2].data.sequence;
+    const last = sequence[sequence.length - 1];
+    last.params.push(stack[stack.length - 1].data);
   }
 
   function processToArray() {

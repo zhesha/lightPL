@@ -90,3 +90,110 @@ test("refinement collection element", function () {
     "type": "statement_list"
   });
 });
+
+test("refinement call empty params", function () {
+  var sourceCode = `a = b()`;
+  var tokens = lexer(sourceCode, rules);
+  const syntaxTree = analize(tokens);
+
+  expect(syntaxTree).toEqual({
+    "list": [
+      {
+        "target": "a",
+        "type": "assign",
+        "value": {
+          "sequence": [
+            {
+              "operandType": "value",
+              "sequence": [
+                {
+                  "type": "value",
+                  "value": "b",
+                  "valueType": "variable"
+                },
+                {
+                  "params": [],
+                  "refinementType": "call",
+                  "type": "refinement"
+                }
+              ],
+              "type": "operand"
+            }
+          ],
+          "type": "expression"
+        }
+      }
+    ],
+    "type": "statement_list"
+  });
+});
+
+test("refinement call with params", function () {
+  var sourceCode = `a = b(1, 2)`;
+  var tokens = lexer(sourceCode, rules);
+  const syntaxTree = analize(tokens);
+
+  expect(syntaxTree).toEqual({
+    "list": [
+      {
+        "target": "a",
+        "type": "assign",
+        "value": {
+          "sequence": [
+            {
+              "operandType": "value",
+              "sequence": [
+                {
+                  "type": "value",
+                  "value": "b",
+                  "valueType": "variable"
+                },
+                {
+                  "params": [
+                    {
+                      "sequence": [
+                        {
+                          "operandType": "value",
+                          "sequence": [
+                            {
+                              "type": "value",
+                              "value": "1",
+                              "valueType": "number"
+                            }
+                          ],
+                          "type": "operand"
+                        }
+                      ],
+                      "type": "expression"
+                    },
+                    {
+                      "sequence": [
+                        {
+                          "operandType": "value",
+                          "sequence": [
+                            {
+                              "type": "value",
+                              "value": "2",
+                              "valueType": "number"
+                            }
+                          ],
+                          "type": "operand"
+                        }
+                      ],
+                      "type": "expression"
+                    }
+                  ],
+                  "refinementType": "call",
+                  "type": "refinement"
+                }
+              ],
+              "type": "operand"
+            }
+          ],
+          "type": "expression"
+        }
+      }
+    ],
+    "type": "statement_list"
+  });
+});
