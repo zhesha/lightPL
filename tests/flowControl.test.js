@@ -35,8 +35,24 @@ test("simple if", function () {
                     "type": "statement_list",
                     "list": [
                         {
-                            "target": "c",
-                            "type": "assign",
+                            "type": "statement",
+                          "statementType": "assign",
+                          "target": {
+                            "sequence": [
+                              {
+                                "operandType": "value",
+                                "sequence": [
+                                  {
+                                    "type": "value",
+                                    "value": "c",
+                                    "valueType": "variable"
+                                  }
+                                ],
+                                "type": "operand"
+                              }
+                            ],
+                            "type": "expression"
+                          },
                             "value": {
                               "type": "expression",
                               "sequence": [
@@ -144,8 +160,24 @@ test("complicate if", function () {
                     "type": "statement_list",
                     "list": [
                         {
-                            "target": "a",
-                            "type": "assign",
+                          "statementType": "assign",
+                          "target": {
+                            "sequence": [
+                              {
+                                "operandType": "value",
+                                "sequence": [
+                                  {
+                                    "type": "value",
+                                    "value": "a",
+                                    "valueType": "variable"
+                                  }
+                                ],
+                                "type": "operand"
+                              }
+                            ],
+                            "type": "expression"
+                          },
+                          "type": "statement",
                             "value": {
                               "type": "expression",
                               "sequence": [
@@ -164,8 +196,24 @@ test("complicate if", function () {
                             }
                         },
                         {
-                            "target": "b",
-                            "type": "assign",
+                          "statementType": "assign",
+                          "target": {
+                            "sequence": [
+                              {
+                                "operandType": "value",
+                                "sequence": [
+                                  {
+                                    "type": "value",
+                                    "value": "b",
+                                    "valueType": "variable"
+                                  }
+                                ],
+                                "type": "operand"
+                              }
+                            ],
+                            "type": "expression"
+                          },
+                          "type": "statement",
                             "value": {
                               "type": "expression",
                               "sequence": [

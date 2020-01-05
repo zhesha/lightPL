@@ -67,9 +67,10 @@ module.exports = function(tokens) {
               machine: statement(),
               processors: processToStatement,
               data: {
-                type: "statement"
+                type: "statement",
+                statementType: null
               }
-            })),
+            }))
           ],
           { initial: true }
         ),
@@ -127,49 +128,31 @@ module.exports = function(tokens) {
   }
 
   function statement() {
-    const toParams = to(
-      "params",
-      () => true,
-      () => ({
-        machine: expression(),
-        processors: processToCallParams,
-        data: {
-          type: "expression",
-          sequence: []
-        }
-      })
-    );
     return Machine(
       [
-        State(
-          null,
-          [
-            identifier(value => {
-              stack[stack.length - 1].data.tmp = value;
+        State(null, [
+          to(
+            "start",
+            () => true,
+            () => ({
+              machine: expression(),
+              processors: processToStatementStart,
+              data: {
+                type: "expression",
+                sequence: []
+              }
             })
-          ],
-          { initial: true }
-        ),
-        State("identifier", [
+          )
+        ]),
+        State("start", [
           Transition({
             to: "assign",
-            canTransite: tested => tested.type === "assign",
-            onTransition: () =>
-              (stack[stack.length - 1].data = {
-                type: "assign",
-                target: stack[stack.length - 1].data.tmp,
-                value: null
-              })
-          }),
-          Transition({
-            to: "l_bracket",
-            canTransite: tested => tested.type === "l_bracket",
-            onTransition: () =>
-              (stack[stack.length - 1].data = {
-                type: "call",
-                called: stack[stack.length - 1].data.tmp,
-                params: []
-              })
+            canTransite: tested => {
+              if (stack[stack.length - 1].data.statementType !== "assign") {
+                return false;
+              }
+              return tested.type === "assign";
+            }
           })
         ]),
         State("assign", [
@@ -178,7 +161,7 @@ module.exports = function(tokens) {
             () => true,
             () => ({
               machine: expression(),
-              processors: processToAssign,
+              processors: processToAssignValue,
               data: {
                 type: "expression",
                 sequence: []
@@ -186,11 +169,7 @@ module.exports = function(tokens) {
             })
           )
         ]),
-        State("value"),
-        State("l_bracket", [literal("r_bracket"), toParams]),
-        State("comma", [toParams]),
-        State("params", [literal("r_bracket"), comma]),
-        State("r_bracket")
+        State("value")
       ],
       {
         onUnsupportedTransition: onUnsupportedTransition("assignStatement")
@@ -247,25 +226,25 @@ module.exports = function(tokens) {
           null,
           [
             Transition({
-              to: 'unary_operator',
-              canTransite: to => to.type === 'operator' && (to.value === '-' || to.value === '!'),
-              onTransition: to => stack[stack.length - 1].data.sequence.push(
-                {
-                  type: 'unary_operator',
+              to: "unary_operator",
+              canTransite: to =>
+                to.type === "operator" &&
+                (to.value === "-" || to.value === "!"),
+              onTransition: to =>
+                stack[stack.length - 1].data.sequence.push({
+                  type: "unary_operator",
                   operator: to.value
-                }
-              )
+                })
             }),
             Transition({
-              to: 'parenting',
-              canTransite: to => to.type === 'l_bracket',
-              onTransition: to => stack[stack.length - 1].data.sequence.push(
-                {
-                  type: 'operand',
-                  operandType: 'parenting',
+              to: "parenting",
+              canTransite: to => to.type === "l_bracket",
+              onTransition: to =>
+                stack[stack.length - 1].data.sequence.push({
+                  type: "operand",
+                  operandType: "parenting",
                   value: null
-                }
-              )
+                })
             }),
             to(
               "operand",
@@ -275,7 +254,7 @@ module.exports = function(tokens) {
                 processors: processToExpression,
                 data: {
                   type: "operand",
-                  operandType: 'value',
+                  operandType: "value",
                   sequence: []
                 }
               })
@@ -283,17 +262,16 @@ module.exports = function(tokens) {
           ],
           { initial: true }
         ),
-        State('unary_operator', [
+        State("unary_operator", [
           Transition({
-            to: 'parenting',
-            canTransite: to => to.type === 'l_bracket',
-            onTransition: to => stack[stack.length - 1].data.sequence.push(
-              {
-                type: 'operand',
-                operandType: 'parenting',
+            to: "parenting",
+            canTransite: to => to.type === "l_bracket",
+            onTransition: to =>
+              stack[stack.length - 1].data.sequence.push({
+                type: "operand",
+                operandType: "parenting",
                 value: null
-              }
-            )
+              })
           }),
           to(
             "operand",
@@ -303,13 +281,13 @@ module.exports = function(tokens) {
               processors: processToExpression,
               data: {
                 type: "operand",
-                operandType: 'value',
+                operandType: "value",
                 sequence: []
               }
             })
           )
         ]),
-        State('parenting', [
+        State("parenting", [
           to(
             "expression",
             () => true,
@@ -323,49 +301,51 @@ module.exports = function(tokens) {
             })
           )
         ]),
-        State('operand', [
+        State("operand", [
           Transition({
-            to: 'operator',
-            canTransite: to => to.type === 'operator',
-            onTransition: to => stack[stack.length - 1].data.sequence.push(
-              {
-                type: 'operator',
+            to: "operator",
+            canTransite: to => to.type === "operator",
+            onTransition: to =>
+              stack[stack.length - 1].data.sequence.push({
+                type: "operator",
                 operator: to.value
-              }
-            )
+              })
           })
         ]),
-        State('expression', [
+        State("expression", [
           Transition({
-            to: 'operand',
+            to: "operand",
             canTransite: to => {
               const sequence = stack[stack.length - 1].data.sequence;
               const last = sequence[sequence.length - 1];
-              return to.type === 'r_bracket' && last.type === 'operand' && last.operandType === 'parenting';
-            },
+              return (
+                to.type === "r_bracket" &&
+                last.type === "operand" &&
+                last.operandType === "parenting"
+              );
+            }
           })
         ]),
-        State('operator', [
+        State("operator", [
           Transition({
-            to: 'unary_operator',
-            canTransite: to => to.type === 'operator' && (to.value === '-' || to.value === '!'),
-            onTransition: to => stack[stack.length - 1].data.sequence.push(
-              {
-                type: 'unary_operator',
+            to: "unary_operator",
+            canTransite: to =>
+              to.type === "operator" && (to.value === "-" || to.value === "!"),
+            onTransition: to =>
+              stack[stack.length - 1].data.sequence.push({
+                type: "unary_operator",
                 operator: to.value
-              }
-            )
+              })
           }),
           Transition({
-            to: 'parenting',
-            canTransite: to => to.type === 'l_bracket',
-            onTransition: to => stack[stack.length - 1].data.sequence.push(
-              {
-                type: 'operand',
-                operandType: 'parenting',
+            to: "parenting",
+            canTransite: to => to.type === "l_bracket",
+            onTransition: to =>
+              stack[stack.length - 1].data.sequence.push({
+                type: "operand",
+                operandType: "parenting",
                 value: null
-              }
-            )
+              })
           }),
           to(
             "operand",
@@ -375,13 +355,12 @@ module.exports = function(tokens) {
               processors: processToExpression,
               data: {
                 type: "operand",
-                operandType: 'value',
+                operandType: "value",
                 sequence: []
               }
             })
           )
-          ]
-        ),
+        ])
       ],
       {
         onUnsupportedTransition: onUnsupportedTransition("expression")
@@ -396,111 +375,104 @@ module.exports = function(tokens) {
           null,
           [
             Transition({
-              to: 'number',
-              canTransite: to => to.type === 'number',
-              onTransition: to => stack[stack.length - 1].data.sequence.push(
-                {
-                  type: 'value',
-                  valueType: 'number',
+              to: "number",
+              canTransite: to => to.type === "number",
+              onTransition: to =>
+                stack[stack.length - 1].data.sequence.push({
+                  type: "value",
+                  valueType: "number",
                   value: to.value
-                }
-              )
+                })
             }),
             Transition({
-              to: 'string',
-              canTransite: to => to.type === 'string',
-              onTransition: to => stack[stack.length - 1].data.sequence.push(
-                {
-                  type: 'value',
-                  valueType: 'string',
+              to: "string",
+              canTransite: to => to.type === "string",
+              onTransition: to =>
+                stack[stack.length - 1].data.sequence.push({
+                  type: "value",
+                  valueType: "string",
                   value: to.value
-                }
-              )
+                })
             }),
             Transition({
-              to: '_null',
-              canTransite: to => to.type === '_null',
-              onTransition: to => stack[stack.length - 1].data.sequence.push(
-                {
-                  type: 'value',
-                  valueType: '_null',
+              to: "_null",
+              canTransite: to => to.type === "_null",
+              onTransition: to =>
+                stack[stack.length - 1].data.sequence.push({
+                  type: "value",
+                  valueType: "_null",
                   value: to.value
-                }
-              )
+                })
             }),
             Transition({
-              to: '_true',
-              canTransite: to => to.type === '_true',
-              onTransition: to => stack[stack.length - 1].data.sequence.push(
-                {
-                  type: 'value',
-                  valueType: '_true',
+              to: "_true",
+              canTransite: to => to.type === "_true",
+              onTransition: to =>
+                stack[stack.length - 1].data.sequence.push({
+                  type: "value",
+                  valueType: "_true",
                   value: to.value
-                }
-              )
+                })
             }),
             Transition({
-              to: '_false',
-              canTransite: to => to.type === '_false',
-              onTransition: to => stack[stack.length - 1].data.sequence.push(
-                {
-                  type: 'value',
-                  valueType: '_false',
+              to: "_false",
+              canTransite: to => to.type === "_false",
+              onTransition: to =>
+                stack[stack.length - 1].data.sequence.push({
+                  type: "value",
+                  valueType: "_false",
                   value: to.value
-                }
-              )
+                })
             }),
             Transition({
-              to: 'variable',
-              canTransite: to => to.type === 'identifier',
-              onTransition: to => stack[stack.length - 1].data.sequence.push(
-                {
-                  type: 'value',
-                  valueType: 'variable',
+              to: "variable",
+              canTransite: to => to.type === "identifier",
+              onTransition: to =>
+                stack[stack.length - 1].data.sequence.push({
+                  type: "value",
+                  valueType: "variable",
                   value: to.value
-                }
-              )
+                })
             }),
             Transition({
-              to: 'collection_start',
-              canTransite: to => to.type === 'l_square_bracket',
-              onTransition: to => stack[stack.length - 1].data.sequence.push(
-                {
-                  type: 'value',
-                  valueType: 'collection',
+              to: "collection_start",
+              canTransite: to => to.type === "l_square_bracket",
+              onTransition: to =>
+                stack[stack.length - 1].data.sequence.push({
+                  type: "value",
+                  valueType: "collection",
                   tmp: null
-                }
-              )
+                })
             })
           ],
           { initial: true }
         ),
         State("collection_start", [
           Transition({
-            to: 'collection_end',
-            canTransite: to => to.type === 'r_square_bracket',
+            to: "collection_end",
+            canTransite: to => to.type === "r_square_bracket",
             onTransition: to => {
               const sequence = stack[stack.length - 1].data.sequence;
               const last = sequence[sequence.length - 1];
-              last.valueType = 'array';
+              last.valueType = "array";
               last.list = [];
               delete last.tmp;
             }
           }),
           Transition({
-            to: 'collection_dictionary_descriptor',
-            canTransite: to => to.type === 'colon',
+            to: "collection_dictionary_descriptor",
+            canTransite: to => to.type === "colon",
             onTransition: to => {
               const sequence = stack[stack.length - 1].data.sequence;
               const last = sequence[sequence.length - 1];
-              last.valueType = 'dictionary';
+              last.valueType = "dictionary";
               last.list = [];
               delete last.tmp;
             }
           }),
           Transition({
-            to: 'first_collection_entry',
-            canTransite: to => to.type === 'string',
+            to: "first_collection_entry",
+            canTransite: to => to.type === "string",
             onTransition: to => {
               const sequence = stack[stack.length - 1].data.sequence;
               sequence[sequence.length - 1].tmp = to.value;
@@ -519,228 +491,237 @@ module.exports = function(tokens) {
             })
           )
         ]),
-        State("collection_dictionary_descriptor", [Transition({
-          to: 'collection_end',
-          canTransite: to => to.type === 'r_square_bracket'
-        })]),
+        State("collection_dictionary_descriptor", [
+          Transition({
+            to: "collection_end",
+            canTransite: to => to.type === "r_square_bracket"
+          })
+        ]),
         State("first_collection_entry", [
           Transition({
-            to: 'collection_end',
-            canTransite: to => to.type === 'r_square_bracket',
+            to: "collection_end",
+            canTransite: to => to.type === "r_square_bracket",
             onTransition: to => {
               const sequence = stack[stack.length - 1].data.sequence;
               const last = sequence[sequence.length - 1];
-              last.valueType = 'array';
+              last.valueType = "array";
               last.list = [stringAsExpression(last.tmp)];
               delete last.tmp;
             }
           }),
           Transition({
-            to: 'array_comma',
-            canTransite: to => to.type === 'comma',
+            to: "array_comma",
+            canTransite: to => to.type === "comma",
             onTransition: to => {
               const sequence = stack[stack.length - 1].data.sequence;
               const last = sequence[sequence.length - 1];
-              last.valueType = 'array';
+              last.valueType = "array";
               last.list = [last.tmp];
               delete last.tmp;
             }
           }),
           Transition({
-            to: 'dictionary_colon',
-            canTransite: to => to.type === 'colon',
+            to: "dictionary_colon",
+            canTransite: to => to.type === "colon",
             onTransition: to => {
               const sequence = stack[stack.length - 1].data.sequence;
               const last = sequence[sequence.length - 1];
-              last.valueType = 'dictionary';
+              last.valueType = "dictionary";
               last.list = [];
             }
           })
         ]),
-        State("array_comma", [to(
-          "array_value",
-          () => true,
-          () => ({
-            machine: expression(),
-            processors: processToArray,
-            data: {
-              type: "expression",
-              sequence: []
-            }
-          })
-        )]),
-        State("dictionary_colon", [to(
-          "dictionary_value",
-          () => true,
-          () => ({
-            machine: expression(),
-            processors: processToDictionary,
-            data: {
-              type: "expression",
-              sequence: []
-            }
-          })
-        )]),
+        State("array_comma", [
+          to(
+            "array_value",
+            () => true,
+            () => ({
+              machine: expression(),
+              processors: processToArray,
+              data: {
+                type: "expression",
+                sequence: []
+              }
+            })
+          )
+        ]),
+        State("dictionary_colon", [
+          to(
+            "dictionary_value",
+            () => true,
+            () => ({
+              machine: expression(),
+              processors: processToDictionary,
+              data: {
+                type: "expression",
+                sequence: []
+              }
+            })
+          )
+        ]),
         State("array_value", [
           Transition({
-            to: 'array_comma',
-            canTransite: to => to.type === 'comma'
+            to: "array_comma",
+            canTransite: to => to.type === "comma"
           }),
           Transition({
-            to: 'collection_end',
-            canTransite: to => to.type === 'r_square_bracket'
+            to: "collection_end",
+            canTransite: to => to.type === "r_square_bracket"
           })
         ]),
-        State("dictionary_value",[
+        State("dictionary_value", [
           Transition({
-            to: 'dictionary_comma',
-            canTransite: to => to.type === 'comma'
+            to: "dictionary_comma",
+            canTransite: to => to.type === "comma"
           }),
           Transition({
-            to: 'collection_end',
-            canTransite: to => to.type === 'r_square_bracket'
+            to: "collection_end",
+            canTransite: to => to.type === "r_square_bracket"
           })
         ]),
-        State("dictionary_comma",[
+        State("dictionary_comma", [
           Transition({
-            to: 'dictionary_key',
-            canTransite: to => to.type === 'string',
+            to: "dictionary_key",
+            canTransite: to => to.type === "string",
             onTransition: to => {
               const sequence = stack[stack.length - 1].data.sequence;
               sequence[sequence.length - 1].tmp = to.value;
             }
-          }),
+          })
         ]),
-        State("dictionary_key",[Transition({
-          to: 'dictionary_colon',
-          canTransite: to => to.type === 'colon'
-        })]),
+        State("dictionary_key", [
+          Transition({
+            to: "dictionary_colon",
+            canTransite: to => to.type === "colon"
+          })
+        ]),
         State("number", [
           Transition({
-            to: 'dot',
-            canTransite: to => to.type === 'dot',
+            to: "dot",
+            canTransite: to => to.type === "dot",
             onTransition: to => {
               const sequence = stack[stack.length - 1].data.sequence;
               sequence.push({
-                type: 'refinement',
-                refinementType: 'dot'
+                type: "refinement",
+                refinementType: "dot"
               });
             }
           })
         ]),
-        State("string",[
+        State("string", [
           Transition({
-            to: 'dot',
-            canTransite: to => to.type === 'dot',
+            to: "dot",
+            canTransite: to => to.type === "dot",
             onTransition: to => {
               const sequence = stack[stack.length - 1].data.sequence;
               sequence.push({
-                type: 'refinement',
-                refinementType: 'dot'
+                type: "refinement",
+                refinementType: "dot"
               });
             }
           })
         ]),
-        State("_null",[
+        State("_null", [
           Transition({
-            to: 'dot',
-            canTransite: to => to.type === 'dot',
+            to: "dot",
+            canTransite: to => to.type === "dot",
             onTransition: to => {
               const sequence = stack[stack.length - 1].data.sequence;
               sequence.push({
-                type: 'refinement',
-                refinementType: 'dot'
+                type: "refinement",
+                refinementType: "dot"
               });
             }
           })
         ]),
-        State("_false",[
+        State("_false", [
           Transition({
-            to: 'dot',
-            canTransite: to => to.type === 'dot',
+            to: "dot",
+            canTransite: to => to.type === "dot",
             onTransition: to => {
               const sequence = stack[stack.length - 1].data.sequence;
               sequence.push({
-                type: 'refinement',
-                refinementType: 'dot'
+                type: "refinement",
+                refinementType: "dot"
               });
             }
           })
         ]),
-        State("_true",[
+        State("_true", [
           Transition({
-            to: 'dot',
-            canTransite: to => to.type === 'dot',
+            to: "dot",
+            canTransite: to => to.type === "dot",
             onTransition: to => {
               const sequence = stack[stack.length - 1].data.sequence;
               sequence.push({
-                type: 'refinement',
-                refinementType: 'dot'
+                type: "refinement",
+                refinementType: "dot"
               });
             }
           })
         ]),
-        State("collection_end",[
+        State("collection_end", [
           Transition({
-            to: 'dot',
-            canTransite: to => to.type === 'dot',
+            to: "dot",
+            canTransite: to => to.type === "dot",
             onTransition: to => {
               const sequence = stack[stack.length - 1].data.sequence;
               sequence.push({
-                type: 'refinement',
-                refinementType: 'dot'
+                type: "refinement",
+                refinementType: "dot"
               });
             }
           })
         ]),
         State("variable", [
           Transition({
-            to: 'dot',
-            canTransite: to => to.type === 'dot',
+            to: "dot",
+            canTransite: to => to.type === "dot",
             onTransition: to => {
               const sequence = stack[stack.length - 1].data.sequence;
               sequence.push({
-                type: 'refinement',
-                refinementType: 'dot'
+                type: "refinement",
+                refinementType: "dot"
               });
             }
           }),
           Transition({
-            to: 'collection_refinement',
-            canTransite: to => to.type === 'l_square_bracket',
+            to: "collection_refinement",
+            canTransite: to => to.type === "l_square_bracket",
             onTransition: to => {
               const sequence = stack[stack.length - 1].data.sequence;
               sequence.push({
-                type: 'refinement',
-                refinementType: 'collection_refinement',
+                type: "refinement",
+                refinementType: "collection_refinement",
                 key: null
               });
             }
           }),
           Transition({
-            to: 'call',
-            canTransite: to => to.type === 'l_bracket',
+            to: "call",
+            canTransite: to => to.type === "l_bracket",
             onTransition: to => {
               const sequence = stack[stack.length - 1].data.sequence;
               sequence.push({
-                type: 'refinement',
-                refinementType: 'call',
+                type: "refinement",
+                refinementType: "call",
                 params: []
               });
             }
           })
         ]),
-        State("dot", [Transition({
-          to: 'variable',
-          canTransite: to => to.type === 'identifier',
-          onTransition: to => stack[stack.length - 1].data.sequence.push(
-            {
-              type: 'value',
-              valueType: 'variable',
-              value: to.value
-            }
-          )
-        })]),
+        State("dot", [
+          Transition({
+            to: "variable",
+            canTransite: to => to.type === "identifier",
+            onTransition: to =>
+              stack[stack.length - 1].data.sequence.push({
+                type: "value",
+                valueType: "variable",
+                value: to.value
+              })
+          })
+        ]),
         State("collection_refinement", [
           to(
             "collection_key",
@@ -757,38 +738,39 @@ module.exports = function(tokens) {
         ]),
         State("collection_key", [
           Transition({
-            to: 'collection_refinement_end',
-            canTransite: to => to.type === 'r_square_bracket'
+            to: "collection_refinement_end",
+            canTransite: to => to.type === "r_square_bracket"
           })
         ]),
         State("collection_refinement_end", [
           Transition({
-            to: 'dot',
-            canTransite: to => to.type === 'dot',
+            to: "dot",
+            canTransite: to => to.type === "dot",
             onTransition: to => {
               const sequence = stack[stack.length - 1].data.sequence;
               sequence.push({
-                type: 'refinement',
-                refinementType: 'dot'
+                type: "refinement",
+                refinementType: "dot"
               });
             }
           }),
           Transition({
-            to: 'collection_refinement',
-            canTransite: to => to.type === 'l_square_bracket',
+            to: "collection_refinement",
+            canTransite: to => to.type === "l_square_bracket",
             onTransition: to => {
               const sequence = stack[stack.length - 1].data.sequence;
               sequence.push({
-                type: 'refinement',
-                refinementType: 'collection_refinement',
+                type: "refinement",
+                refinementType: "collection_refinement",
                 key: null
               });
             }
-          })]),
+          })
+        ]),
         State("call", [
           Transition({
-            to: 'call_end',
-            canTransite: to => to.type === 'r_bracket',
+            to: "call_end",
+            canTransite: to => to.type === "r_bracket"
           }),
           to(
             "parameter",
@@ -805,39 +787,40 @@ module.exports = function(tokens) {
         ]),
         State("call_end", [
           Transition({
-            to: 'dot',
-            canTransite: to => to.type === 'dot',
+            to: "dot",
+            canTransite: to => to.type === "dot",
             onTransition: to => {
               const sequence = stack[stack.length - 1].data.sequence;
               sequence.push({
-                type: 'refinement',
-                refinementType: 'dot'
+                type: "refinement",
+                refinementType: "dot"
               });
             }
           }),
           Transition({
-            to: 'collection_refinement',
-            canTransite: to => to.type === 'l_square_bracket',
+            to: "collection_refinement",
+            canTransite: to => to.type === "l_square_bracket",
             onTransition: to => {
               const sequence = stack[stack.length - 1].data.sequence;
               sequence.push({
-                type: 'refinement',
-                refinementType: 'collection_refinement',
+                type: "refinement",
+                refinementType: "collection_refinement",
                 key: null
               });
             }
-          })]),
+          })
+        ]),
 
         State("parameter", [
           Transition({
-            to: 'call_end',
-            canTransite: to => to.type === 'r_bracket',
+            to: "call_end",
+            canTransite: to => to.type === "r_bracket"
           }),
           Transition({
-            to: 'call',
-            canTransite: to => to.type === 'comma',
-          }),
-        ]),
+            to: "call",
+            canTransite: to => to.type === "comma"
+          })
+        ])
       ],
       {
         onUnsupportedTransition: onUnsupportedTransition("refinement")
@@ -933,8 +916,8 @@ module.exports = function(tokens) {
   function processToArray() {
     const sequence = stack[stack.length - 2].data.sequence;
     const data = sequence[sequence.length - 1];
-    if (data.valueType === 'collection') {
-      data.valueType = 'array';
+    if (data.valueType === "collection") {
+      data.valueType = "array";
       data.list = [stack[stack.length - 1].data];
       delete data.tmp;
     } else {
@@ -950,6 +933,29 @@ module.exports = function(tokens) {
       value: stack[stack.length - 1].data
     });
     delete data.tmp;
+  }
+
+  function processToStatementStart() {
+    const expSequence = stack[stack.length - 1].data.sequence;
+    const opSequence = expSequence[expSequence.length - 1].sequence;
+    const lastOp = opSequence[opSequence.length - 1];
+    const st = stack[stack.length - 2].data;
+    if (lastOp.type === "refinement" && lastOp.refinementType === "call") {
+      st.statementType = "call";
+      st.called = stack[stack.length - 1].data;
+    } else if (
+      (lastOp.type === "refinement" &&
+        lastOp.refinementType === "collection_refinement") ||
+      (lastOp.type === "value" && lastOp.valueType === "variable") ||
+      lastOp.type === "variable"
+    ) {
+      st.statementType = "assign";
+      st.target = stack[stack.length - 1].data;
+    }
+  }
+
+  function processToAssignValue() {
+    stack[stack.length - 2].data.value = stack[stack.length - 1].data;
   }
 
   function to(entity, canTransite, entry) {
@@ -971,20 +977,20 @@ module.exports = function(tokens) {
 
   function stringAsExpression(str) {
     return {
-      "sequence": [
+      sequence: [
         {
-          "operandType": "value",
-          "sequence": [
+          operandType: "value",
+          sequence: [
             {
-              "type": "value",
-              "value": str,
-              "valueType": "string"
+              type: "value",
+              value: str,
+              valueType: "string"
             }
           ],
-          "type": "operand"
+          type: "operand"
         }
       ],
-      "type": "expression"
-    }
+      type: "expression"
+    };
   }
 };

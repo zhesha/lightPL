@@ -4,15 +4,31 @@ var analize = require("../sintaxAnalizer.js");
 var lexer = lexerjs.lexer;
 
 test("refinement", function () {
-  var sourceCode = `a = 1.1.to`;
+  var sourceCode = `a = 1.1.toString`;
   var tokens = lexer(sourceCode, rules);
   const syntaxTree = analize(tokens);
 
   expect(syntaxTree).toEqual({
     "list": [
       {
-        "target": "a",
-        "type": "assign",
+        "type": "statement",
+        "statementType": "assign",
+        "target": {
+          "sequence": [
+            {
+              "operandType": "value",
+              "sequence": [
+                {
+                  "type": "value",
+                  "value": "a",
+                  "valueType": "variable"
+                }
+              ],
+              "type": "operand"
+            }
+          ],
+          "type": "expression"
+        },
         "value": {
           "sequence": [
             {
@@ -26,6 +42,11 @@ test("refinement", function () {
                 {
                   "refinementType": "dot",
                   "type": "refinement"
+                },
+                {
+                  "type": "value",
+                  "value": "toString",
+                  "valueType": "variable"
                 }
               ],
               "type": "operand"
@@ -47,8 +68,24 @@ test("refinement collection element", function () {
   expect(syntaxTree).toEqual({
     "list": [
       {
-        "target": "a",
-        "type": "assign",
+        "type": "statement",
+        "statementType": "assign",
+        "target": {
+          "sequence": [
+            {
+              "operandType": "value",
+              "sequence": [
+                {
+                  "type": "value",
+                  "value": "a",
+                  "valueType": "variable"
+                }
+              ],
+              "type": "operand"
+            }
+          ],
+          "type": "expression"
+        },
         "value": {
           "sequence": [
             {
@@ -99,8 +136,24 @@ test("refinement call empty params", function () {
   expect(syntaxTree).toEqual({
     "list": [
       {
-        "target": "a",
-        "type": "assign",
+        "type": "statement",
+        "statementType": "assign",
+        "target": {
+          "sequence": [
+            {
+              "operandType": "value",
+              "sequence": [
+                {
+                  "type": "value",
+                  "value": "a",
+                  "valueType": "variable"
+                }
+              ],
+              "type": "operand"
+            }
+          ],
+          "type": "expression"
+        },
         "value": {
           "sequence": [
             {
@@ -136,8 +189,24 @@ test("refinement call with params", function () {
   expect(syntaxTree).toEqual({
     "list": [
       {
-        "target": "a",
-        "type": "assign",
+        "type": "statement",
+        "statementType": "assign",
+        "target": {
+          "sequence": [
+            {
+              "operandType": "value",
+              "sequence": [
+                {
+                  "type": "value",
+                  "value": "a",
+                  "valueType": "variable"
+                }
+              ],
+              "type": "operand"
+            }
+          ],
+          "type": "expression"
+        },
         "value": {
           "sequence": [
             {

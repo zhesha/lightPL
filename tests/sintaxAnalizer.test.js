@@ -181,8 +181,24 @@ test("assign variable as value", function () {
           variables: [{name: 'b', value: null}]
         },
       {
-        target: "b",
-        type: "assign",
+        type: "statement",
+        "statementType": "assign",
+        "target": {
+          "sequence": [
+            {
+              "operandType": "value",
+              "sequence": [
+                {
+                  "type": "value",
+                  "value": "b",
+                  "valueType": "variable"
+                }
+              ],
+              "type": "operand"
+            }
+          ],
+          "type": "expression"
+        },
         value: {
           "type": "expression",
           "sequence": [
@@ -213,8 +229,24 @@ test("single assign", function () {
     expect(syntaxTree).toEqual({
         type: 'statement_list',
         list: [{
-            type: 'assign',
-            target:  'a',
+          "type": "statement",
+          "statementType": "assign",
+          "target": {
+            "sequence": [
+              {
+                "operandType": "value",
+                "sequence": [
+                  {
+                    "type": "value",
+                    "value": "a",
+                    "valueType": "variable"
+                  }
+                ],
+                "type": "operand"
+              }
+            ],
+            "type": "expression"
+          },
             value: {
               "type": "expression",
               "sequence": [
@@ -246,8 +278,24 @@ test("multiple single assign", function () {
         type: 'statement_list',
         list: [
         {
-            "target": "a",
-            "type": "assign",
+            "type": "statement",
+          "statementType": "assign",
+          "target": {
+            "sequence": [
+              {
+                "operandType": "value",
+                "sequence": [
+                  {
+                    "type": "value",
+                    "value": "a",
+                    "valueType": "variable"
+                  }
+                ],
+                "type": "operand"
+              }
+            ],
+            "type": "expression"
+          },
             "value": {
               "type": "expression",
               "sequence": [
@@ -266,8 +314,24 @@ test("multiple single assign", function () {
             }
         },
         {
-            "target": "a",
-            "type": "assign",
+            "type": "statement",
+          "statementType": "assign",
+          "target": {
+            "sequence": [
+              {
+                "operandType": "value",
+                "sequence": [
+                  {
+                    "type": "value",
+                    "value": "a",
+                    "valueType": "variable"
+                  }
+                ],
+                "type": "operand"
+              }
+            ],
+            "type": "expression"
+          },
             "value": {
               "type": "expression",
               "sequence": [
@@ -286,8 +350,24 @@ test("multiple single assign", function () {
             }
         },
         {
-            "target": "b",
-            "type": "assign",
+            "type": "statement",
+          "statementType": "assign",
+          "target": {
+            "sequence": [
+              {
+                "operandType": "value",
+                "sequence": [
+                  {
+                    "type": "value",
+                    "value": "b",
+                    "valueType": "variable"
+                  }
+                ],
+                "type": "operand"
+              }
+            ],
+            "type": "expression"
+          },
             "value": {
               "type": "expression",
               "sequence": [
@@ -338,8 +418,24 @@ test("variable declaration and assign", function () {
               }}]
         },
             {
-                type: 'assign',
-                target: 'a',
+                type: 'statement',
+              "statementType": "assign",
+              "target": {
+                "sequence": [
+                  {
+                    "operandType": "value",
+                    "sequence": [
+                      {
+                        "type": "value",
+                        "value": "a",
+                        "valueType": "variable"
+                      }
+                    ],
+                    "type": "operand"
+                  }
+                ],
+                "type": "expression"
+              },
                 value: {
                   "type": "expression",
                   "sequence": [
@@ -398,8 +494,24 @@ test("declaration and assign mix", function () {
             ]
         },
             {
-                "target": "a",
-                "type": "assign",
+                "type": "statement",
+              "statementType": "assign",
+              "target": {
+                "sequence": [
+                  {
+                    "operandType": "value",
+                    "sequence": [
+                      {
+                        "type": "value",
+                        "value": "a",
+                        "valueType": "variable"
+                      }
+                    ],
+                    "type": "operand"
+                  }
+                ],
+                "type": "expression"
+              },
                 "value": {
                   "type": "expression",
                   "sequence": [
@@ -442,8 +554,24 @@ test("declaration and assign mix", function () {
                 ]
             },
             {
-                "target": "b",
-                "type": "assign",
+                "type": "statement",
+              "statementType": "assign",
+              "target": {
+                "sequence": [
+                  {
+                    "operandType": "value",
+                    "sequence": [
+                      {
+                        "type": "value",
+                        "value": "b",
+                        "valueType": "variable"
+                      }
+                    ],
+                    "type": "operand"
+                  }
+                ],
+                "type": "expression"
+              },
                 "value": {
                   "type": "expression",
                   "sequence": [

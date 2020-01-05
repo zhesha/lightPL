@@ -11,9 +11,29 @@ test("function call without params", function () {
   expect(syntaxTree).toEqual({
     type: 'statement_list',
     list: [{
-      "called": "print",
-      "params": [],
-      "type": "call"
+      "statementType": "call",
+      "type": "statement",
+      "called": {
+        "sequence": [
+          {
+            "operandType": "value",
+            "sequence": [
+              {
+                "type": "value",
+                "value": "print",
+                "valueType": "variable"
+              },
+              {
+                "params": [],
+                "refinementType": "call",
+                "type": "refinement"
+              }
+            ],
+            "type": "operand"
+          }
+        ],
+        "type": "expression"
+      }
     }]
   });
 });
@@ -24,27 +44,51 @@ test("function call with one param", function () {
   const syntaxTree = analize(tokens);
 
   expect(syntaxTree).toEqual({
-    type: 'statement_list',
-    list: [{
-      "called": "print",
-      "params": [{
-        "type": "expression",
-        "sequence": [
-          {
-            "operandType": "value",
-            "type": "operand",
-            "sequence": [
-              {
-                "type": "value",
-                "value": "'Hello'",
-                "valueType": "string"
-              }
-            ]
-          }
-        ],
-      }],
-      "type": "call"
-    }]
+    "type": "statement_list",
+    "list": [
+      {
+        "type": "statement",
+        "statementType": "call",
+        "called": {
+          "type": "expression",
+          "sequence": [
+            {
+              "operandType": "value",
+              "type": "operand",
+              "sequence": [
+                {
+                  "type": "value",
+                  "value": "print",
+                  "valueType": "variable"
+                },
+                {
+                  "params": [
+                    {
+                      "sequence": [
+                        {
+                          "operandType": "value",
+                          "sequence": [
+                            {
+                              "type": "value",
+                              "value": "'Hello'",
+                              "valueType": "string"
+                            }
+                          ],
+                          "type": "operand"
+                        }
+                      ],
+                      "type": "expression"
+                    }
+                  ],
+                  "refinementType": "call",
+                  "type": "refinement"
+                }
+              ]
+            }
+          ]
+        }
+      }
+    ]
   });
 });
 
@@ -57,8 +101,24 @@ test("operator", function () {
     type: 'statement_list',
     list: [
       {
-        "target": "a",
-        "type": "assign",
+        "type": "statement",
+        "statementType": "assign",
+        "target": {
+          "sequence": [
+            {
+              "operandType": "value",
+              "sequence": [
+                {
+                  "type": "value",
+                  "value": "a",
+                  "valueType": "variable"
+                }
+              ],
+              "type": "operand"
+            }
+          ],
+          "type": "expression"
+        },
         "value": {
           "sequence": [
             {
@@ -103,8 +163,24 @@ test("unary operator", function () {
   expect(syntaxTree).toEqual({
     type: 'statement_list',
     list: [{
-      "target": "a",
-      "type": "assign",
+      "type": "statement",
+      "statementType": "assign",
+      "target": {
+        "sequence": [
+          {
+            "operandType": "value",
+            "sequence": [
+              {
+                "type": "value",
+                "value": "a",
+                "valueType": "variable"
+              }
+            ],
+            "type": "operand"
+          }
+        ],
+        "type": "expression"
+      },
       "value": {
         "sequence": [
           {
@@ -137,8 +213,24 @@ test("multiple operator", function () {
   expect(syntaxTree).toEqual({
     type: 'statement_list',
     list: [{
-      "target": "a",
-      "type": "assign",
+      "type": "statement",
+      "statementType": "assign",
+      "target": {
+        "sequence": [
+          {
+            "operandType": "value",
+            "sequence": [
+              {
+                "type": "value",
+                "value": "a",
+                "valueType": "variable"
+              }
+            ],
+            "type": "operand"
+          }
+        ],
+        "type": "expression"
+      },
       "value": {
         "sequence": [
           {
@@ -197,8 +289,24 @@ test("parenting", function () {
   expect(syntaxTree).toEqual({
     type: 'statement_list',
     list: [{
-      "target": "a",
-      "type": "assign",
+      "type": "statement",
+      "statementType": "assign",
+      "target": {
+        "sequence": [
+          {
+            "operandType": "value",
+            "sequence": [
+              {
+                "type": "value",
+                "value": "a",
+                "valueType": "variable"
+              }
+            ],
+            "type": "operand"
+          }
+        ],
+        "type": "expression"
+      },
       "value": {
         "sequence": [
           {

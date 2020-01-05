@@ -11,8 +11,24 @@ test("empty array", function () {
   expect(syntaxTree).toEqual({
     "list": [
       {
-        "target": "a",
-        "type": "assign",
+        "type": "statement",
+        "statementType": "assign",
+        "target": {
+          "sequence": [
+            {
+              "operandType": "value",
+              "sequence": [
+                {
+                  "type": "value",
+                  "value": "a",
+                  "valueType": "variable"
+                }
+              ],
+              "type": "operand"
+            }
+          ],
+          "type": "expression"
+        },
         "value": {
           "sequence": [
             {
@@ -43,8 +59,24 @@ test("array 1 element", function () {
   expect(syntaxTree).toEqual({
     "list": [
       {
-        "target": "a",
-        "type": "assign",
+        "type": "statement",
+        "statementType": "assign",
+        "target": {
+          "sequence": [
+            {
+              "operandType": "value",
+              "sequence": [
+                {
+                  "type": "value",
+                  "value": "a",
+                  "valueType": "variable"
+                }
+              ],
+              "type": "operand"
+            }
+          ],
+          "type": "expression"
+        },
         "value": {
           "sequence": [
             {
@@ -92,8 +124,24 @@ test("array multiple element", function () {
   expect(syntaxTree).toEqual({
     "list": [
       {
-        "target": "a",
-        "type": "assign",
+        "type": "statement",
+        "statementType": "assign",
+        "target": {
+          "sequence": [
+            {
+              "operandType": "value",
+              "sequence": [
+                {
+                  "type": "value",
+                  "value": "a",
+                  "valueType": "variable"
+                }
+              ],
+              "type": "operand"
+            }
+          ],
+          "type": "expression"
+        },
         "value": {
           "sequence": [
             {
@@ -173,8 +221,24 @@ test("array first string element", function () {
   expect(syntaxTree).toEqual({
     "list": [
       {
-        "target": "a",
-        "type": "assign",
+        "type": "statement",
+        "statementType": "assign",
+        "target": {
+          "sequence": [
+            {
+              "operandType": "value",
+              "sequence": [
+                {
+                  "type": "value",
+                  "value": "a",
+                  "valueType": "variable"
+                }
+              ],
+              "type": "operand"
+            }
+          ],
+          "type": "expression"
+        },
         "value": {
           "sequence": [
             {
@@ -222,8 +286,24 @@ test("dictionary empty", function () {
   expect(syntaxTree).toEqual({
     "list": [
       {
-        "target": "a",
-        "type": "assign",
+        "type": "statement",
+        "statementType": "assign",
+        "target": {
+          "sequence": [
+            {
+              "operandType": "value",
+              "sequence": [
+                {
+                  "type": "value",
+                  "value": "a",
+                  "valueType": "variable"
+                }
+              ],
+              "type": "operand"
+            }
+          ],
+          "type": "expression"
+        },
         "value": {
           "sequence": [
             {
@@ -254,8 +334,24 @@ test("dictionary single element", function () {
   expect(syntaxTree).toEqual({
     "list": [
       {
-        "target": "a",
-        "type": "assign",
+        "type": "statement",
+        "statementType": "assign",
+        "target": {
+          "sequence": [
+            {
+              "operandType": "value",
+              "sequence": [
+                {
+                  "type": "value",
+                  "value": "a",
+                  "valueType": "variable"
+                }
+              ],
+              "type": "operand"
+            }
+          ],
+          "type": "expression"
+        },
         "value": {
           "sequence": [
             {
@@ -306,8 +402,24 @@ test("dictionary multiple element", function () {
   expect(syntaxTree).toEqual({
     "list": [
       {
-        "target": "a",
-        "type": "assign",
+        "type": "statement",
+        "statementType": "assign",
+        "target": {
+          "sequence": [
+            {
+              "operandType": "value",
+              "sequence": [
+                {
+                  "type": "value",
+                  "value": "a",
+                  "valueType": "variable"
+                }
+              ],
+              "type": "operand"
+            }
+          ],
+          "type": "expression"
+        },
         "value": {
           "sequence": [
             {
