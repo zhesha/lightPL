@@ -48,7 +48,7 @@ module.exports = function(tokens) {
             nextStatement,
             to("variableDeclaration", is("_var"), () => ({
               machine: variableDeclaration(),
-              processors: processToStatement,
+              processors: processPush("list"),
               data: {
                 type: "variable_declaration",
                 variables: []
@@ -56,7 +56,7 @@ module.exports = function(tokens) {
             })),
             to("ifStatement", is("_if"), () => ({
               machine: ifStatement(),
-              processors: processToStatement,
+              processors: processPush("list"),
               data: {
                 type: "if",
                 condition: null,
@@ -65,7 +65,7 @@ module.exports = function(tokens) {
             })),
             to("statement", is("identifier"), () => ({
               machine: statement(),
-              processors: processToStatement,
+              processors: processPush("list"),
               data: {
                 type: "statement",
                 statementType: null
@@ -111,7 +111,7 @@ module.exports = function(tokens) {
             () => true,
             () => ({
               machine: expression(),
-              processors: processToVarDeclaration,
+              processors: processToLast("variables"),
               data: {
                 type: "expression",
                 sequence: []
@@ -161,7 +161,7 @@ module.exports = function(tokens) {
             () => true,
             () => ({
               machine: expression(),
-              processors: processToAssignValue,
+              processors: processTo("value"),
               data: {
                 type: "expression",
                 sequence: []
@@ -187,7 +187,7 @@ module.exports = function(tokens) {
             () => true,
             () => ({
               machine: expression(),
-              processors: processToCondition,
+              processors: processTo("condition"),
               data: {
                 type: "expression",
                 sequence: []
@@ -202,7 +202,7 @@ module.exports = function(tokens) {
             () => true,
             () => ({
               machine: statementList(),
-              processors: processToIf,
+              processors: processTo("statements"),
               data: {
                 type: "statement_list",
                 list: []
@@ -239,7 +239,7 @@ module.exports = function(tokens) {
             () => true,
             () => ({
               machine: refinement(),
-              processors: processToExpression,
+              processors: processPush("sequence"),
               data: {
                 type: "operand",
                 operandType: "value",
@@ -254,7 +254,7 @@ module.exports = function(tokens) {
             () => true,
             () => ({
               machine: expression(),
-              processors: processToParenting,
+              processors: processToLast("sequence"),
               data: {
                 type: "expression",
                 sequence: []
@@ -792,7 +792,7 @@ module.exports = function(tokens) {
         () => true,
         () => ({
           machine: refinement(),
-          processors: processToExpression,
+          processors: processPush("sequence"),
           data: {
             type: "operand",
             operandType: "value",
@@ -831,34 +831,21 @@ module.exports = function(tokens) {
     ]);
   }
 
-  function processToStatement() {
-    stack[stack.length - 2].data.list.push(stack[stack.length - 1].data);
+  function processTo(field) {
+    return () =>
+      (stack[stack.length - 2].data[field] = stack[stack.length - 1].data);
   }
 
-  function processToIf() {
-    stack[stack.length - 2].data.statements = stack[stack.length - 1].data;
+  function processPush(field) {
+    return () =>
+      stack[stack.length - 2].data[field].push(stack[stack.length - 1].data);
   }
 
-  function processToCondition() {
-    stack[stack.length - 2].data.condition = stack[stack.length - 1].data;
-  }
-
-  function processToExpression() {
-    stack[stack.length - 2].data.sequence.push(stack[stack.length - 1].data);
-  }
-
-  function processToAssignValue() {
-    stack[stack.length - 2].data.value = stack[stack.length - 1].data;
-  }
-
-  function processToVarDeclaration() {
-    const variable = stack[stack.length - 2].data.variables;
-    variable[variable.length - 1].value = stack[stack.length - 1].data;
-  }
-
-  function processToParenting() {
-    const sequence = stack[stack.length - 2].data.sequence;
-    sequence[sequence.length - 1].value = stack[stack.length - 1].data;
+  function processToLast(field) {
+    return () => {
+      const lastField = stack[stack.length - 2].data[field];
+      lastField[lastField.length - 1].value = stack[stack.length - 1].data;
+    };
   }
 
   function processToCollectionRefinement() {
