@@ -11,94 +11,39 @@ module.exports = function(tokens) {
   const l_brace = literal("l_brace");
   const r_brace = literal("r_brace");
   const nextStatement = literal("statementList", "eol");
-  const toVariableDeclaration = to("variableDeclaration", is("_var"), () => ({
-    machine: variableDeclaration(),
-    processors: processPush("list"),
-    data: {
-      type: "variable_declaration",
-      variables: []
-    }
-  }));
-  const toIfStatement = to("ifStatement", is("_if"), () => ({
-    machine: ifStatement(),
-    processors: processPush("list"),
-    data: {
-      type: "if",
-      condition: null,
-      statements: []
-    }
-  }));
-  const toStatement = to("statement", is("identifier"), () => ({
-    machine: statement(),
-    processors: processPush("list"),
-    data: {
-      type: "statement",
-      statementType: null
-    }
-  }));
-  const toIdentifier = identifier(value => {
-    stack[stack.length - 1].data.variables.push({
-      name: value,
-      value: null
-    });
-  });
-  const toValue = to(
-    "value",
-    () => true,
-    () => ({
-      machine: expression(),
-      processors: processToLast("variables"),
-      data: {
-        type: "expression",
-        sequence: []
-      }
-    })
+  const toCollectionEnd2 = literal("collection_end", "r_square_bracket");
+  const toArrayComma2 = literal("array_comma", "comma");
+  const toDictionaryComma = literal("dictionary_comma", "comma");
+  const toDictionaryColon2 = literal("dictionary_colon", "colon");
+  const toCollectionRefinementEnd = literal(
+    "collection_refinement_end",
+    "r_square_bracket"
   );
-  const toStart = to(
-    "start",
-    () => true,
-    () => ({
-      machine: expression(),
-      processors: processToStatementStart,
-      data: {
-        type: "expression",
-        sequence: []
-      }
-    })
-  );
-  const toAssign = Transition({
-    to: "assign",
-    canTransite: tested => {
-      if (stack[stack.length - 1].data.statementType !== "assign") {
-        return false;
-      }
-      return tested.type === "assign";
-    }
-  });
-  // TODO change toValue
-  const toValue2 = to(
-    "value",
-    () => true,
-    () => ({
-      machine: expression(),
-      processors: processTo("value"),
-      data: {
-        type: "expression",
-        sequence: []
-      }
-    })
-  );
-  const toCondition = to(
+  const toCallEnd = literal("call_end", "r_bracket");
+  const toCall2 = literal("call", "comma");
+  const toValue = transitionToExpression("value", processToLast("variables"));
+  const toStart = transitionToExpression("start", processToStatementStart);
+  const toValue2 = transitionToExpression("value", processTo("value"));
+  const toCondition = transitionToExpression(
     "condition",
-    () => true,
-    () => ({
-      machine: expression(),
-      processors: processTo("condition"),
-      data: {
-        type: "expression",
-        sequence: []
-      }
-    })
+    processTo("condition")
+  );
+  const toExpression = transitionToExpression(
+    "expression",
+    processToLast("sequence")
+  );
+  const toArrayValue = transitionToExpression("array_value", processToArray);
+  const toDictionaryValue = transitionToExpression(
+    "dictionary_value",
+    processToDictionary
+  );
+  const toCollectionKey = transitionToExpression(
+    "collection_key",
+    processToCollectionRefinement
+  );
+  const toParameter = transitionToExpression(
+    "parameter",
+    processToCallParamsList
   );
   const toStatementList = to(
     "statementList",
@@ -106,12 +51,118 @@ module.exports = function(tokens) {
     () => ({
       machine: statementList(),
       processors: processTo("statements"),
-      data: {
-        type: "statement_list",
-        list: []
-      }
+      data: { type: "statement_list", list: [] }
     })
   );
+  const toVariableDeclaration = to("variableDeclaration", is("_var"), () => ({
+    machine: variableDeclaration(),
+    processors: processPush("list"),
+    data: { type: "variable_declaration", variables: [] }
+  }));
+  const toIfStatement = to("ifStatement", is("_if"), () => ({
+    machine: ifStatement(),
+    processors: processPush("list"),
+    data: { type: "if", condition: null, statements: [] }
+  }));
+  const toStatement = to("statement", is("identifier"), () => ({
+    machine: statement(),
+    processors: processPush("list"),
+    data: { type: "statement", statementType: null }
+  }));
+  const toOperand = to(
+    "operand",
+    () => true,
+    () => ({
+      machine: refinement(),
+      processors: processPush("sequence"),
+      data: { type: "operand", operandType: "value", sequence: [] }
+    })
+  );
+  const toParenting = transitionToSequence(
+    () => ({ type: "operand", operandType: "parenting", value: null }),
+    "parenting",
+    "l_bracket"
+  );
+  const toOperator = transitionToSequence(
+    v => ({ type: "operator", operator: v }),
+    "operator"
+  );
+  const toNumber = transitionToSequence(
+    v => ({ type: "value", valueType: "number", value: v }),
+    "number"
+  );
+  const toString = transitionToSequence(
+    v => ({ type: "value", valueType: "string", value: v }),
+    "string"
+  );
+  const toNull = transitionToSequence(
+    v => ({ type: "value", valueType: "_null", value: v }),
+    "_null"
+  );
+  const toTrue = transitionToSequence(
+    v => ({ type: "value", valueType: "_true", value: v }),
+    "_true"
+  );
+  const toFalse = transitionToSequence(
+    v => ({ type: "value", valueType: "_false", value: v }),
+    "_false"
+  );
+  const toVariable = transitionToSequence(
+    v => ({ type: "value", valueType: "variable", value: v }),
+    "variable",
+    "identifier"
+  );
+  const toCollectionStart = transitionToSequence(
+    v => ({ type: "value", valueType: "collection", tmp: null }),
+    "collection_start",
+    "l_square_bracket"
+  );
+  const toDot = transitionToSequence(
+    v => ({ type: "refinement", refinementType: "dot" }),
+    "dot"
+  );
+  const toCollectionRefinement = transitionToSequence(
+    v => ({
+      type: "refinement",
+      refinementType: "collection_refinement",
+      key: null
+    }),
+    "collection_refinement",
+    "l_square_bracket"
+  );
+  const toCall = transitionToSequence(
+    v => ({ type: "refinement", refinementType: "call", params: [] }),
+    "call",
+    "l_bracket"
+  );
+  const toCollectionEnd = transitionToCollection(
+    "collection_end",
+    "r_square_bracket",
+    "array",
+    () => []
+  );
+  const toCollectionDictionaryDescriptor = transitionToCollection(
+    "collection_dictionary_descriptor",
+    "colon",
+    "dictionary",
+    () => []
+  );
+  const toCollectionEnd3 = transitionToCollection(
+    "collection_end",
+    "r_square_bracket",
+    "array",
+    t => [stringAsExpression(t)]
+  );
+  const toArrayComma = transitionToCollection(
+    "array_comma",
+    "comma",
+    "array",
+    t => [t]
+  );
+  const toFirstCollectionEntry = transitionToCollectionKey(
+    "first_collection_entry"
+  );
+  const toDictionaryKey = transitionToCollectionKey("dictionary_key");
   const toUnaryOperator = Transition({
     to: "unary_operator",
     canTransite: to =>
@@ -121,202 +172,6 @@ module.exports = function(tokens) {
         type: "unary_operator",
         operator: to.value
       })
-  });
-  const toParenting = Transition({
-    to: "parenting",
-    canTransite: to => to.type === "l_bracket",
-    onTransition: () =>
-      stack[stack.length - 1].data.sequence.push({
-        type: "operand",
-        operandType: "parenting",
-        value: null
-      })
-  });
-  const toOperand = to(
-    "operand",
-    () => true,
-    () => ({
-      machine: refinement(),
-      processors: processPush("sequence"),
-      data: {
-        type: "operand",
-        operandType: "value",
-        sequence: []
-      }
-    })
-  );
-  const toExpression = to(
-    "expression",
-    () => true,
-    () => ({
-      machine: expression(),
-      processors: processToLast("sequence"),
-      data: {
-        type: "expression",
-        sequence: []
-      }
-    })
-  );
-  const toOperator = Transition({
-    to: "operator",
-    canTransite: to => to.type === "operator",
-    onTransition: to =>
-      stack[stack.length - 1].data.sequence.push({
-        type: "operator",
-        operator: to.value
-      })
-  });
-  // TODO
-  const toOperand2 = Transition({
-    to: "operand",
-    canTransite: to => {
-      const sequence = stack[stack.length - 1].data.sequence;
-      const last = sequence[sequence.length - 1];
-      return (
-        to.type === "r_bracket" &&
-        last.type === "operand" &&
-        last.operandType === "parenting"
-      );
-    }
-  });
-  const toNumber = Transition({
-    to: "number",
-    canTransite: to => to.type === "number",
-    onTransition: to =>
-      stack[stack.length - 1].data.sequence.push({
-        type: "value",
-        valueType: "number",
-        value: to.value
-      })
-  });
-  const toString = Transition({
-    to: "string",
-    canTransite: to => to.type === "string",
-    onTransition: to =>
-      stack[stack.length - 1].data.sequence.push({
-        type: "value",
-        valueType: "string",
-        value: to.value
-      })
-  });
-  const toNull = Transition({
-    to: "_null",
-    canTransite: to => to.type === "_null",
-    onTransition: to =>
-      stack[stack.length - 1].data.sequence.push({
-        type: "value",
-        valueType: "_null",
-        value: to.value
-      })
-  });
-  const toTrue = Transition({
-    to: "_true",
-    canTransite: to => to.type === "_true",
-    onTransition: to =>
-      stack[stack.length - 1].data.sequence.push({
-        type: "value",
-        valueType: "_true",
-        value: to.value
-      })
-  });
-  const toFalse = Transition({
-    to: "_false",
-    canTransite: to => to.type === "_false",
-    onTransition: to =>
-      stack[stack.length - 1].data.sequence.push({
-        type: "value",
-        valueType: "_false",
-        value: to.value
-      })
-  });
-  const toVariable = Transition({
-    to: "variable",
-    canTransite: to => to.type === "identifier",
-    onTransition: to =>
-      stack[stack.length - 1].data.sequence.push({
-        type: "value",
-        valueType: "variable",
-        value: to.value
-      })
-  });
-  const toCollectionStart = Transition({
-    to: "collection_start",
-    canTransite: to => to.type === "l_square_bracket",
-    onTransition: () =>
-      stack[stack.length - 1].data.sequence.push({
-        type: "value",
-        valueType: "collection",
-        tmp: null
-      })
-  });
-  const toCollectionEnd = Transition({
-    to: "collection_end",
-    canTransite: to => to.type === "r_square_bracket",
-    onTransition: () => {
-      const sequence = stack[stack.length - 1].data.sequence;
-      const last = sequence[sequence.length - 1];
-      last.valueType = "array";
-      last.list = [];
-      delete last.tmp;
-    }
-  });
-  const toCollectionDictionaryDescriptor = Transition({
-    to: "collection_dictionary_descriptor",
-    canTransite: to => to.type === "colon",
-    onTransition: () => {
-      const sequence = stack[stack.length - 1].data.sequence;
-      const last = sequence[sequence.length - 1];
-      last.valueType = "dictionary";
-      last.list = [];
-      delete last.tmp;
-    }
-  });
-  const toFirstCollectionEntry = Transition({
-    to: "first_collection_entry",
-    canTransite: to => to.type === "string",
-    onTransition: to => {
-      const sequence = stack[stack.length - 1].data.sequence;
-      sequence[sequence.length - 1].tmp = to.value;
-    }
-  });
-  const toArrayValue = to(
-    "array_value",
-    () => true,
-    () => ({
-      machine: expression(),
-      processors: processToArray,
-      data: {
-        type: "expression",
-        sequence: []
-      }
-    })
-  );
-  // TODO
-  const toCollectionEnd2 = Transition({
-    to: "collection_end",
-    canTransite: to => to.type === "r_square_bracket"
-  });
-  const toCollectionEnd3 = Transition({
-    to: "collection_end",
-    canTransite: to => to.type === "r_square_bracket",
-    onTransition: () => {
-      const sequence = stack[stack.length - 1].data.sequence;
-      const last = sequence[sequence.length - 1];
-      last.valueType = "array";
-      last.list = [stringAsExpression(last.tmp)];
-      delete last.tmp;
-    }
-  });
-  const toArrayComma = Transition({
-    to: "array_comma",
-    canTransite: to => to.type === "comma",
-    onTransition: () => {
-      const sequence = stack[stack.length - 1].data.sequence;
-      const last = sequence[sequence.length - 1];
-      last.valueType = "array";
-      last.list = [last.tmp];
-      delete last.tmp;
-    }
   });
   const toDictionaryColon = Transition({
     to: "dictionary_colon",
@@ -328,108 +183,36 @@ module.exports = function(tokens) {
       last.list = [];
     }
   });
-  const toDictionaryValue = to(
-    "dictionary_value",
-    () => true,
-    () => ({
-      machine: expression(),
-      processors: processToDictionary,
-      data: {
-        type: "expression",
-        sequence: []
-      }
-    })
-  );
-  const toArrayComma2 = Transition({
-    to: "array_comma",
-    canTransite: to => to.type === "comma"
-  });
-  const toDictionaryComma = Transition({
-    to: "dictionary_comma",
-    canTransite: to => to.type === "comma"
-  });
-  const toDictionaryKey = Transition({
-    to: "dictionary_key",
-    canTransite: to => to.type === "string",
-    onTransition: to => {
-      const sequence = stack[stack.length - 1].data.sequence;
-      sequence[sequence.length - 1].tmp = to.value;
-    }
-  });
-  const toDictionaryColon2 = Transition({
-    to: "dictionary_colon",
-    canTransite: to => to.type === "colon"
-  });
-  const toDot = Transition({
-    to: "dot",
-    canTransite: to => to.type === "dot",
-    onTransition: () => {
-      const sequence = stack[stack.length - 1].data.sequence;
-      sequence.push({
-        type: "refinement",
-        refinementType: "dot"
+  const toIdentifier = Transition({
+    to: "identifier",
+    canTransite: tested => tested.type === "identifier",
+    onTransition(to) {
+      stack[stack.length - 1].data.variables.push({
+        name: to.value,
+        value: null
       });
     }
   });
-  const toCollectionRefinement = Transition({
-    to: "collection_refinement",
-    canTransite: to => to.type === "l_square_bracket",
-    onTransition: () => {
-      const sequence = stack[stack.length - 1].data.sequence;
-      sequence.push({
-        type: "refinement",
-        refinementType: "collection_refinement",
-        key: null
-      });
+  const toAssign = Transition({
+    to: "assign",
+    canTransite: tested => {
+      if (stack[stack.length - 1].data.statementType !== "assign") {
+        return false;
+      }
+      return tested.type === "assign";
     }
   });
-  const toCall = Transition({
-    to: "call",
-    canTransite: to => to.type === "l_bracket",
-    onTransition: () => {
+  const toOperand2 = Transition({
+    to: "operand",
+    canTransite: to => {
       const sequence = stack[stack.length - 1].data.sequence;
-      sequence.push({
-        type: "refinement",
-        refinementType: "call",
-        params: []
-      });
+      const last = sequence[sequence.length - 1];
+      return (
+        to.type === "r_bracket" &&
+        last.type === "operand" &&
+        last.operandType === "parenting"
+      );
     }
-  });
-  const toCollectionKey = to(
-    "collection_key",
-    () => true,
-    () => ({
-      machine: expression(),
-      processors: processToCollectionRefinement,
-      data: {
-        type: "expression",
-        sequence: []
-      }
-    })
-  );
-  const toCollectionRefinementEnd = Transition({
-    to: "collection_refinement_end",
-    canTransite: to => to.type === "r_square_bracket"
-  });
-  const toCallEnd = Transition({
-    to: "call_end",
-    canTransite: to => to.type === "r_bracket"
-  });
-  const toParameter = to(
-    "parameter",
-    () => true,
-    () => ({
-      machine: expression(),
-      processors: processToCallParamsList,
-      data: {
-        type: "expression",
-        sequence: []
-      }
-    })
-  );
-  const toCall2 = Transition({
-    to: "call",
-    canTransite: to => to.type === "comma"
   });
 
   // States
@@ -693,23 +476,13 @@ module.exports = function(tokens) {
     };
   }
 
-  function identifier(handler) {
-    return Transition({
-      to: "identifier",
-      canTransite: tested => tested.type === "identifier",
-      onTransition(to) {
-        handler(to.value);
-      }
-    });
-  }
-
+  // Create transitions
   function literal(to, test) {
     return Transition({
       to: to,
       canTransite: tested => tested.type === (test || to)
     });
   }
-
   function to(entity, canTransite, createEntry) {
     return Transition({
       to: entity,
@@ -719,6 +492,51 @@ module.exports = function(tokens) {
         stack[stack.length - 1].machine.go(to);
       }
     });
+  }
+  function transitionToSequence(createData, transiteTo, type) {
+    return Transition({
+      to: transiteTo,
+      canTransite: to => to.type === (type || transiteTo),
+      onTransition: to =>
+        stack[stack.length - 1].data.sequence.push(createData(to.value))
+    });
+  }
+  function transitionToCollectionKey(to) {
+    return Transition({
+      to: to,
+      canTransite: to => to.type === "string",
+      onTransition: to => {
+        const sequence = stack[stack.length - 1].data.sequence;
+        sequence[sequence.length - 1].tmp = to.value;
+      }
+    });
+  }
+  function transitionToCollection(to, type, valueType, crateList) {
+    return Transition({
+      to: to,
+      canTransite: to => to.type === type,
+      onTransition: () => {
+        const sequence = stack[stack.length - 1].data.sequence;
+        const last = sequence[sequence.length - 1];
+        last.valueType = valueType;
+        last.list = crateList(last.tmp);
+        delete last.tmp;
+      }
+    });
+  }
+  function transitionToExpression(name, processor) {
+    return to(
+      name,
+      () => true,
+      () => ({
+        machine: expression(),
+        processors: processor,
+        data: {
+          type: "expression",
+          sequence: []
+        }
+      })
+    );
   }
 
   function is(type) {
@@ -744,35 +562,31 @@ module.exports = function(tokens) {
     };
   }
 
+  // Processors
   function processTo(field) {
     return () =>
       (stack[stack.length - 2].data[field] = stack[stack.length - 1].data);
   }
-
   function processPush(field) {
     return () =>
       stack[stack.length - 2].data[field].push(stack[stack.length - 1].data);
   }
-
   function processToLast(field) {
     return () => {
       const lastField = stack[stack.length - 2].data[field];
       lastField[lastField.length - 1].value = stack[stack.length - 1].data;
     };
   }
-
   function processToCollectionRefinement() {
     const sequence = stack[stack.length - 2].data.sequence;
     const last = sequence[sequence.length - 1];
     last.key = stack[stack.length - 1].data;
   }
-
   function processToCallParamsList() {
     const sequence = stack[stack.length - 2].data.sequence;
     const last = sequence[sequence.length - 1];
     last.params.push(stack[stack.length - 1].data);
   }
-
   function processToArray() {
     const sequence = stack[stack.length - 2].data.sequence;
     const data = sequence[sequence.length - 1];
@@ -784,7 +598,6 @@ module.exports = function(tokens) {
       data.list.push(stack[stack.length - 1].data);
     }
   }
-
   function processToDictionary() {
     const sequence = stack[stack.length - 2].data.sequence;
     const data = sequence[sequence.length - 1];
@@ -794,7 +607,6 @@ module.exports = function(tokens) {
     });
     delete data.tmp;
   }
-
   function processToStatementStart() {
     const expSequence = stack[stack.length - 1].data.sequence;
     const opSequence = expSequence[expSequence.length - 1].sequence;
