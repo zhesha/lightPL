@@ -21,6 +21,9 @@ module.exports = function(tokens) {
   );
   const toCallEnd = literal("call_end", "r_bracket");
   const toCall2 = literal("call", "comma");
+  const toElse = literal("_else");
+  const toElseLbrace = literal("else_l_brace", "l_brace");
+  const toElseRbrace = literal("else_r_brace", "r_brace");
   const toValue = transitionToExpression("value", processToLast("variables"));
   const toStart = transitionToExpression("start", processToStatementStart);
   const toValue2 = transitionToExpression("value", processTo("value"));
@@ -51,6 +54,15 @@ module.exports = function(tokens) {
     () => ({
       machine: statementList(),
       processors: processTo("statements"),
+      data: { type: "statement_list", list: [] }
+    })
+  );
+  const toElseStatementList = to(
+    "elseStatementList",
+    () => true,
+    () => ({
+      machine: statementList(),
+      processors: processTo("alternative"),
       data: { type: "statement_list", list: [] }
     })
   );
@@ -245,7 +257,11 @@ module.exports = function(tokens) {
   const conditionState = State("condition", [l_brace]);
   const ifLbraceState = State("l_brace", [toStatementList]);
   const ifStatementListState = State("statementList", [r_brace]);
-  const ifRbraceState = State("r_brace");
+  const ifRbraceState = State("r_brace", [toElse]);
+  const elseState = State("_else", [toElseLbrace]);
+  const elseLbraceState = State("else_l_brace", [toElseStatementList]);
+  const elseStatementListState = State("elseStatementList", [toElseRbrace]);
+  const elseRbraceState = State("else_r_brace");
   // expression
   const expressionStart = State(
     null,
@@ -410,7 +426,11 @@ module.exports = function(tokens) {
         conditionState,
         ifLbraceState,
         ifStatementListState,
-        ifRbraceState
+        ifRbraceState,
+        elseState,
+        elseLbraceState,
+        elseStatementListState,
+        elseRbraceState
       ],
       {
         onUnsupportedTransition: onUnsupportedTransition("ifStatement")

@@ -77,6 +77,123 @@ test("simple if", function() {
   });
 });
 
+test("if with else", function() {
+  var sourceCode = `if open {
+      c = 1
+    } else {
+      c = 2
+    }`;
+  var tokens = lexer(sourceCode, rules);
+  const syntaxTree = analize(tokens);
+
+  expect(syntaxTree).toEqual({
+    type: "statement_list",
+    list: [
+      {
+        type: "if",
+        condition: {
+          type: "expression",
+          sequence: [
+            {
+              operandType: "value",
+              type: "operand",
+              sequence: [
+                {
+                  type: "value",
+                  value: "open",
+                  valueType: "variable"
+                }
+              ]
+            }
+          ]
+        },
+        statements: {
+          type: "statement_list",
+          list: [
+            {
+              type: "statement",
+              statementType: "assign",
+              target: {
+                sequence: [
+                  {
+                    operandType: "value",
+                    sequence: [
+                      {
+                        type: "value",
+                        value: "c",
+                        valueType: "variable"
+                      }
+                    ],
+                    type: "operand"
+                  }
+                ],
+                type: "expression"
+              },
+              value: {
+                type: "expression",
+                sequence: [
+                  {
+                    operandType: "value",
+                    type: "operand",
+                    sequence: [
+                      {
+                        type: "value",
+                        value: "1",
+                        valueType: "number"
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        alternative: {
+          type: "statement_list",
+          list: [
+            {
+              type: "statement",
+              statementType: "assign",
+              target: {
+                sequence: [
+                  {
+                    operandType: "value",
+                    sequence: [
+                      {
+                        type: "value",
+                        value: "c",
+                        valueType: "variable"
+                      }
+                    ],
+                    type: "operand"
+                  }
+                ],
+                type: "expression"
+              },
+              value: {
+                type: "expression",
+                sequence: [
+                  {
+                    operandType: "value",
+                    type: "operand",
+                    sequence: [
+                      {
+                        type: "value",
+                        value: "2",
+                        valueType: "number"
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      }
+    ]
+  });
+});
+
 test("complicate if", function() {
   var sourceCode = `var a = true
     var b = 1
