@@ -7,6 +7,7 @@ module.exports = function(tokens) {
   const assign = literal("assign");
   const comma = literal("comma");
   const _if = literal("_if");
+  const _while = literal("_while");
   const _var = literal("_var");
   const l_brace = literal("l_brace");
   const r_brace = literal("r_brace");
@@ -75,6 +76,11 @@ module.exports = function(tokens) {
     machine: ifStatement(),
     processors: processPush("list"),
     data: { type: "if", condition: null, statements: [] }
+  }));
+  const toWhileStatement = to("whileStatement", is("_while"), () => ({
+    machine: whileStatement(),
+    processors: processPush("list"),
+    data: { type: "while", condition: null, statements: [] }
   }));
   const toStatement = to("statement", is("identifier"), () => ({
     machine: statement(),
@@ -231,7 +237,13 @@ module.exports = function(tokens) {
   // statement list
   const statementListState = State(
     "statementList",
-    [nextStatement, toVariableDeclaration, toIfStatement, toStatement],
+    [
+      nextStatement,
+      toVariableDeclaration,
+      toIfStatement,
+      toWhileStatement,
+      toStatement
+    ],
     { initial: true }
   );
   const variableDeclarationState = State("variableDeclaration", [
@@ -239,6 +251,7 @@ module.exports = function(tokens) {
   ]);
   const statementState = State("statement", [nextStatement]);
   const ifStatementState = State("ifStatement", [nextStatement]);
+  const whileStatementState = State("whileStatement", [nextStatement]);
   //var declaration
   const varStart = State(null, [_var], { initial: true });
   const varState = State("_var", [toIdentifier]);
@@ -253,11 +266,17 @@ module.exports = function(tokens) {
   const statementLastState = State("value");
   // if
   const ifStartState = State(null, [_if], { initial: true });
+  const whileStartState = State(null, [_while], { initial: true });
   const ifState = State("_if", [toCondition]);
+  const whileState = State("_while", [toCondition]);
   const conditionState = State("condition", [l_brace]);
+  const whileConditionState = State("condition", [l_brace]);
   const ifLbraceState = State("l_brace", [toStatementList]);
+  const whileLbraceState = State("l_brace", [toStatementList]);
   const ifStatementListState = State("statementList", [r_brace]);
+  const whileStatementListState = State("statementList", [r_brace]);
   const ifRbraceState = State("r_brace", [toElse]);
+  const whileRbraceState = State("r_brace");
   const elseState = State("_else", [toElseLbrace]);
   const elseLbraceState = State("else_l_brace", [toElseStatementList]);
   const elseStatementListState = State("elseStatementList", [toElseRbrace]);
@@ -380,7 +399,8 @@ module.exports = function(tokens) {
         statementListState,
         variableDeclarationState,
         statementState,
-        ifStatementState
+        ifStatementState,
+        whileStatementState
       ],
       {
         onUnsupportedTransition: onUnsupportedTransition("StatementList")
@@ -434,6 +454,22 @@ module.exports = function(tokens) {
       ],
       {
         onUnsupportedTransition: onUnsupportedTransition("ifStatement")
+      }
+    );
+  }
+
+  function whileStatement() {
+    return Machine(
+      [
+        whileStartState,
+        whileState,
+        whileConditionState,
+        whileLbraceState,
+        whileStatementListState,
+        whileRbraceState
+      ],
+      {
+        onUnsupportedTransition: onUnsupportedTransition("whileStatement")
       }
     );
   }
