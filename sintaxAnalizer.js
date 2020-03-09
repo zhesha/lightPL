@@ -8,6 +8,8 @@ module.exports = function(tokens) {
   const comma = literal("comma");
   const _if = literal("_if");
   const _while = literal("_while");
+  const _for = literal("_for");
+  const _in = literal("_in");
   const _var = literal("_var");
   const l_brace = literal("l_brace");
   const r_brace = literal("r_brace");
@@ -32,6 +34,7 @@ module.exports = function(tokens) {
     "condition",
     processTo("condition")
   );
+  const toIterable = transitionToExpression("iterable", processTo("iterable"));
   const toExpression = transitionToExpression(
     "expression",
     processToLast("sequence")
@@ -81,6 +84,17 @@ module.exports = function(tokens) {
     machine: whileStatement(),
     processors: processPush("list"),
     data: { type: "while", condition: null, statements: [] }
+  }));
+  const toForStatement = to("forStatement", is("_for"), () => ({
+    machine: forStatement(),
+    processors: processPush("list"),
+    data: {
+      type: "for",
+      iterable: null,
+      iterator: null,
+      statements: [],
+      defineIterator: false
+    }
   }));
   const toStatement = to("statement", is("identifier"), () => ({
     machine: statement(),
@@ -211,6 +225,20 @@ module.exports = function(tokens) {
       });
     }
   });
+  const toForVar = Transition({
+    to: "forVar",
+    canTransite: to => to.type === "_var",
+    onTransition(to) {
+      stack[stack.length - 1].data.defineIterator = true;
+    }
+  });
+  const toIterator = Transition({
+    to: "iterator",
+    canTransite: to => to.type === "identifier",
+    onTransition(to) {
+      stack[stack.length - 1].data.iterator = to.value;
+    }
+  });
   const toAssign = Transition({
     to: "assign",
     canTransite: tested => {
@@ -242,6 +270,7 @@ module.exports = function(tokens) {
       toVariableDeclaration,
       toIfStatement,
       toWhileStatement,
+      toForStatement,
       toStatement
     ],
     { initial: true }
@@ -252,6 +281,7 @@ module.exports = function(tokens) {
   const statementState = State("statement", [nextStatement]);
   const ifStatementState = State("ifStatement", [nextStatement]);
   const whileStatementState = State("whileStatement", [nextStatement]);
+  const forStatementState = State("forStatement", [nextStatement]);
   //var declaration
   const varStart = State(null, [_var], { initial: true });
   const varState = State("_var", [toIdentifier]);
@@ -267,16 +297,21 @@ module.exports = function(tokens) {
   // if
   const ifStartState = State(null, [_if], { initial: true });
   const whileStartState = State(null, [_while], { initial: true });
+  const forStartState = State(null, [_for], { initial: true });
   const ifState = State("_if", [toCondition]);
   const whileState = State("_while", [toCondition]);
+  const forState = State("_for", [toForVar, toIterator]);
   const conditionState = State("condition", [l_brace]);
   const whileConditionState = State("condition", [l_brace]);
   const ifLbraceState = State("l_brace", [toStatementList]);
   const whileLbraceState = State("l_brace", [toStatementList]);
+  const forLbraceState = State("l_brace", [toStatementList]);
   const ifStatementListState = State("statementList", [r_brace]);
   const whileStatementListState = State("statementList", [r_brace]);
+  const forStatementListState = State("statementList", [r_brace]);
   const ifRbraceState = State("r_brace", [toElse]);
   const whileRbraceState = State("r_brace");
+  const forRbraceState = State("r_brace");
   const elseState = State("_else", [toElseLbrace]);
   const elseLbraceState = State("else_l_brace", [toElseStatementList]);
   const elseStatementListState = State("elseStatementList", [toElseRbrace]);
@@ -364,6 +399,10 @@ module.exports = function(tokens) {
   const callState = State("call", [toCallEnd, toParameter]);
   const callEndState = State("call_end", [toDot, toCollectionRefinement]);
   const parameterState = State("parameter", [toCallEnd, toCall2]);
+  const forVarState = State("forVar", [toIterator]);
+  const forIteratorState = State("iterator", [_in]);
+  const forInState = State("_in", [toIterable]);
+  const forIterableState = State("iterable", [l_brace]);
 
   // main
   stack.push({
@@ -400,7 +439,8 @@ module.exports = function(tokens) {
         variableDeclarationState,
         statementState,
         ifStatementState,
-        whileStatementState
+        whileStatementState,
+        forStatementState
       ],
       {
         onUnsupportedTransition: onUnsupportedTransition("StatementList")
@@ -470,6 +510,27 @@ module.exports = function(tokens) {
       ],
       {
         onUnsupportedTransition: onUnsupportedTransition("whileStatement")
+      }
+    );
+  }
+
+  function forStatement() {
+    return Machine(
+      [
+        forStartState,
+        forState,
+
+        forVarState,
+        forIteratorState,
+        forInState,
+        forIterableState,
+
+        forLbraceState,
+        forStatementListState,
+        forRbraceState
+      ],
+      {
+        onUnsupportedTransition: onUnsupportedTransition("forStatement")
       }
     );
   }

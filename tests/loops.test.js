@@ -65,3 +65,85 @@ test("simple while", function() {
     ]
   });
 });
+
+test("simple for", function() {
+  var sourceCode = `for var i in arr {
+      show(i)
+    }`;
+  var tokens = lexer(sourceCode, rules);
+  const syntaxTree = analize(tokens);
+
+  expect(syntaxTree).toEqual({
+    type: "statement_list",
+    list: [
+      {
+        type: "for",
+        defineIterator: true,
+        iterator: "i",
+        iterable: {
+          type: "expression",
+          sequence: [
+            {
+              operandType: "value",
+              sequence: [
+                {
+                  type: "value",
+                  value: "arr",
+                  valueType: "variable"
+                }
+              ],
+              type: "operand"
+            }
+          ]
+        },
+        statements: {
+          type: "statement_list",
+          list: [
+            {
+              type: "statement",
+              statementType: "call",
+              called: {
+                type: "expression",
+                sequence: [
+                  {
+                    type: "operand",
+                    operandType: "value",
+                    sequence: [
+                      {
+                        type: "value",
+                        value: "show",
+                        valueType: "variable"
+                      },
+                      {
+                        type: "refinement",
+                        refinementType: "call",
+                        params: [
+                          {
+                            type: "expression",
+                            sequence: [
+                              {
+                                operandType: "value",
+                                sequence: [
+                                  {
+                                    type: "value",
+                                    value: "i",
+                                    valueType: "variable"
+                                  }
+                                ],
+                                type: "operand"
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      }
+    ]
+  });
+});
