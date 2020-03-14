@@ -1,12 +1,9 @@
-var lexerjs = require("js-lexer");
-var fs = require("fs");
-var rules = require("./rules.js");
-var analize = require("./sintaxAnalizer.js");
-var lexer = lexerjs.lexer;
+#!/usr/bin/env node
 
-// process.argv
-// /usr/local/bin
+const { composeOptionsForNodeEnv } = require("./NodeEnvironment.js");
+const lightPL = require("./lightPL.js");
 
-// var sourceCode = fs.readFileSync('index.lpl', 'utf-8');
-// var tokens = lexer(sourceCode, rules);
-// const ast = analize(tokens);
+const environmentOptions = composeOptionsForNodeEnv();
+if (environmentOptions) {
+  lightPL(environmentOptions);
+}

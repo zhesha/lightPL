@@ -6,10 +6,15 @@
   "scripts": {
     "test": "jest",
     "coverage": "jest --collectCoverage",
-    "prett": "prettier --write sintaxAnalizer.js"
+    "prett": "prettier --write sintaxAnalizer.js",
+    "run": "light index.lpl"
   },
   "author": "",
   "license": "ISC",
+  "type": "module",
+  "bin": {
+    "light": "./index.js"
+  },
   "dependencies": {
     "js-lexer": "^0.1.0",
     "@sasha-z/fsm_js": "git://github.com/zhesha/fsm_js.git"
