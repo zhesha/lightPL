@@ -589,7 +589,7 @@ module.exports = function(tokens) {
     return (from, to) => {
       const t = to ? to.type : "nothing";
       const f = from ? from.type : "nothing";
-      throw `it's error to have ${t} after ${f} in "${machineName}"`;
+      throw new Error(`it's error to have ${t} after ${f} in "${machineName}"`);
     };
   }
 
