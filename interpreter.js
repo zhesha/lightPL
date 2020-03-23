@@ -58,7 +58,6 @@ const processors = {
     }
   },
   expression: node => {
-    console.log(processors.expressionSequence(node.sequence));
     return processors.expressionSequence(node.sequence);
   },
   operand: node => {
@@ -69,12 +68,6 @@ const processors = {
     } else {
       throw `Unknown operandType: ${node.operandType}`;
     }
-  },
-  unary_operator: node => {
-    // TODO
-  },
-  refinement: node => {
-    // TODO
   },
   value: node => {
     if (node.valueType === "number") {
@@ -87,6 +80,10 @@ const processors = {
       return false;
     } else if (node.valueType === "null") {
       return null;
+    } else if (node.valueType === "variable") {
+      return variables[node.value];
+    } else {
+      throw 'Unknown value type'
     }
     return null;
   },
@@ -154,37 +151,32 @@ const processors = {
       }
     }
   },
-  // someRefinement: sequence => {
-  //   //TODO this should be call for any function or refinement sequence
-  //   // for now it is only function call
-  //   funcList[sequence[0].value].apply(
-  //     null,
-  //     sequence[1].params.map(param => execute(param))
-  //   );
-  // },
   operandValue: node => {
     if (node.sequence.length === 1) {
       return execute(node.sequence[0]);
     } else {
-      // TODO
       return processors.refinementSequence(node.sequence);
     }
   },
   refinementSequence: sequence => {
-    let value;
+    let value = variables;
     for (let item of sequence) {
       if (item.type === "value" && item.valueType === "variable") {
-        value = variables[item.value];
+        value = value[item.value];
       } else if (item.type === "refinement" && item.refinementType === "call") {
-        value.apply(null, item.params.map(param => execute(param)));
+        value = value.apply(null, item.params.map(param => execute(param)));
+      } else if (item.type === "refinement" && item.refinementType === "collection_refinement") {
+        value = value[execute(item.key)];
+      } else if (item.type === "refinement" && item.refinementType === "dot") {
+        // Do nothing
       } else {
-        // TODO
         throw "Unknown sequence type";
       }
     }
+    return value;
   },
   operandParenting: node => {
-    // TODO
+    return execute(node.value);
   },
   expressionSequence: sequence => {
     if (sequence.length === 1) {
