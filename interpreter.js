@@ -82,6 +82,14 @@ const processors = {
       return null;
     } else if (node.valueType === "variable") {
       return variables[node.value];
+    } else if (node.valueType === "array") {
+      return node.list.map(i => execute(i));
+    }  else if (node.valueType === "dictionary") {
+      let obj = {};
+      for (let i of node.list) {
+        obj[i.key.slice(1, i.key.length-1)] = execute(i.value);
+      }
+      return obj;
     } else {
       throw 'Unknown value type'
     }
@@ -105,7 +113,23 @@ const processors = {
     }
   },
   for: node => {
-    // TODO
+    if (node.defineIterator) {
+      variables[node.iterator] = null;
+    }
+    const iterable = execute(node.iterable);
+    if (Array.isArray(iterable)) {
+      for (let i of iterable) {
+        variables[node.iterator] = i;
+        execute(node.statements);
+      }
+    } else {
+      for (let i in iterable) {
+        if (iterable.hasOwnProperty(i)) {
+          variables[node.iterator] = iterable[i];
+          execute(node.statements);
+        }
+      }
+    }
   },
   assign: node => {
     if (node.target.sequence.length !== 1) {
@@ -131,8 +155,6 @@ const processors = {
           target.type === "refinement" &&
           target.refinementType === "collection_refinement"
         ) {
-          // TODO it didn't work with variables
-          // TODO if it's function return undefined, need to check when functions call will be done
           obj = obj[execute(target.key)];
         } else {
           throw `Incorrect assign target`;
@@ -223,5 +245,4 @@ function execute(node) {
   }
 }
 
-// execute(ast);
 module.exports = execute;
