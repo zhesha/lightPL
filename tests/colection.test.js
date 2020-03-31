@@ -480,3 +480,84 @@ test("dictionary multiple element", function() {
     type: "statement_list"
   });
 });
+
+test("array of strings", function() {
+  var sourceCode = `a = ['test', 'test']`;
+  var tokens = lexer(sourceCode, rules);
+  const syntaxTree = analize(tokens);
+
+  expect(syntaxTree).toEqual({
+    list: [
+      {
+        statementType: "assign",
+        target: {
+          sequence: [
+            {
+              operandType: "value",
+              sequence: [
+                {
+                  type: "value",
+                  value: "a",
+                  valueType: "variable"
+                }
+              ],
+              type: "operand"
+            }
+          ],
+          type: "expression"
+        },
+        type: "statement",
+        value: {
+          sequence: [
+            {
+              operandType: "value",
+              sequence: [
+                {
+                  list: [
+                    {
+                      sequence: [
+                        {
+                          operandType: "value",
+                          sequence: [
+                            {
+                              type: "value",
+                              value: "'test'",
+                              valueType: "string"
+                            }
+                          ],
+                          type: "operand"
+                        }
+                      ],
+                      type: "expression"
+                    },
+                    {
+                      sequence: [
+                        {
+                          operandType: "value",
+                          sequence: [
+                            {
+                              type: "value",
+                              value: "'test'",
+                              valueType: "string"
+                            }
+                          ],
+                          type: "operand"
+                        }
+                      ],
+                      type: "expression"
+                    }
+                  ],
+                  type: "value",
+                  valueType: "array"
+                }
+              ],
+              type: "operand"
+            }
+          ],
+          type: "expression"
+        }
+      }
+    ],
+    type: "statement_list"
+  });
+});

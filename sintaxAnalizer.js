@@ -189,7 +189,7 @@ module.exports = function(tokens) {
     "array_comma",
     "comma",
     "array",
-    t => [t]
+    t => [stringAsExpression(t)]
   );
   const toFirstCollectionEntry = transitionToCollectionKey(
     "first_collection_entry"
