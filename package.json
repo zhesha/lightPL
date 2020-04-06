@@ -7,7 +7,7 @@
     "test": "jest",
     "coverage": "jest --collectCoverage",
     "prett": "prettier --write sintaxAnalizer.js",
-    "run": "light index.lpl"
+    "run": "light index.lpl -js"
   },
   "author": "",
   "license": "ISC",
