@@ -1,7 +1,7 @@
 # Get started
 
 ## Install
-`npm i -g lightPL`
+`npm i -g lightpl`
 
 ## To execute:
 ```shell script
