@@ -1,17 +1,19 @@
-##Install
+# Get started
+
+## Install
 `npm i -g lightPL`
 
-##To execute:
+## To execute:
 ```shell script
 light <file_name>
 ```
 
-##To translate to js:
+## To translate to js:
 ```shell script
 light <file_name> -js
 ```
 
-##Hello world
+## Hello world
 To print "Hello world" in terminal, create new file `hello_world.lpl`, then print:
 ```
 print('Hello world')
@@ -21,9 +23,9 @@ and run(in terminal):
 light hello_world.lpl
 ```
 
-#Language tour
+# Language tour
 
-##Variables
+## Variables
 Variables can be defined with "var" keyword
 ```
 var variableName
@@ -39,39 +41,39 @@ During definition variables can be initialized
 var variable = 0
 ``` 
 
-##Values
-###Number
+## Values
+### Number
 Variables can contain number
 ```
 var variable = 0
 ``` 
 
-###String
+### String
 String should be in single quote
 ```
 var variable = 'Hello world'
 ``` 
 
-###Bool
+### Bool
 Bool is one of two literals 
 ```
 var on = true
 var off = false
 ``` 
 
-###Null
+### Null
 Null represent nothing 
 ```
 var empty = null
 ``` 
 
-##Collections
-###List
+## Collections
+### List
 to store similar data you can use lists
 ```
 var list = [1, 23, 1234]
 ``` 
-###Map
+### Map
 to store data as "key" "value" pares
 ```
 var legs = [
@@ -81,8 +83,8 @@ var legs = [
 ]
 ```
 
-##Control flow statements
-###If
+## Control flow statements
+### If
 if statements with optional else statements:
 ```
 if age < 18 {
@@ -92,7 +94,7 @@ if age < 18 {
 }
 ``` 
 
-###While
+### While
 A while loop evaluates the condition before the loop:
 ```
 while apples > 0 {
@@ -101,7 +103,7 @@ while apples > 0 {
 }
 ```
 
-###For
+### For
 "for" is iteration for collections:
 ```
 for var item in beg {
@@ -109,14 +111,14 @@ for var item in beg {
 }
 ```
 
-##Operations
-###Mathematical
+## Operations
+### Mathematical
 '+', '-', '*', '/'
 ```
 var ourMoney = myMoney + yourMoney
 ```
 
-###Comparision
+### Comparision
 '==', '!=', '>=', '<=', '>', '<'
 ```
 if playerHealth == 0 {
@@ -124,7 +126,7 @@ if playerHealth == 0 {
 }
 ```
 
-###Logical
+### Logical
 '!', '&&', '||'
 ```
 if day == 'sunday' || day == 'saturday' {
@@ -132,7 +134,7 @@ if day == 'sunday' || day == 'saturday' {
 }
 ```
 
-##Comments
+## Comments
 you can comment your code to explain it purpose
 ```
 // We store time in seconds but show it in minutes
