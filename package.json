@@ -1,6 +1,6 @@
 {
   "name": "lightpl",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Lightweight programming language",
   "main": "index.js",
   "scripts": {
@@ -11,7 +11,6 @@
   },
   "author": "",
   "license": "ISC",
-  "type": "module",
   "bin": {
     "light": "./index.js"
   },
