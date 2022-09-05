@@ -1,6 +1,6 @@
 {
   "name": "lightpl",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "Lightweight programming language",
   "main": "index.js",
   "scripts": {
@@ -16,7 +16,7 @@
   },
   "dependencies": {
     "js-lexer": "^0.1.0",
-    "@sasha-z/fsm_js": "git://github.com/zhesha/fsm_js.git"
+    "@sasha-z/fsm_js": "^0.1.2"
   },
   "devDependencies": {
     "jest": "^24.8.0",
